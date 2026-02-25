@@ -101,28 +101,7 @@ body{display:flex;flex-direction:column;}
 </head>
 <body>
 <div id="hdr">
-  <div class="logo" onclick="goHome()" style="display:flex;align-items:center;gap:8px;">
-    <svg width="32" height="28" viewBox="0 0 32 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- 国会議事堂シルエット -->
-      <!-- 中央ドーム -->
-      <ellipse cx="16" cy="10" rx="4" ry="5" fill="#c9a84c"/>
-      <rect x="14" y="10" width="4" height="4" fill="#c9a84c"/>
-      <!-- 中央塔 -->
-      <rect x="13" y="14" width="6" height="8" fill="#c9a84c"/>
-      <!-- 左棟 -->
-      <rect x="3" y="17" width="9" height="5" fill="#c9a84c"/>
-      <rect x="5" y="14" width="5" height="3" fill="#c9a84c"/>
-      <!-- 右棟 -->
-      <rect x="20" y="17" width="9" height="5" fill="#c9a84c"/>
-      <rect x="22" y="14" width="5" height="3" fill="#c9a84c"/>
-      <!-- 階段基部 -->
-      <rect x="1" y="22" width="30" height="2" fill="#c9a84c"/>
-      <rect x="0" y="24" width="32" height="2" fill="#c9a84c"/>
-      <!-- ドームの窓 -->
-      <ellipse cx="16" cy="9" rx="1.5" ry="2" fill="#07090f" opacity="0.5"/>
-    </svg>
-    政治家<span>マップ</span>
-  </div>
+  <div class="logo" onclick="goHome()">政治家<span>マップ</span></div>
   <div id="dt"></div>
 </div>
 <div id="sa">
@@ -410,7 +389,7 @@ function openBF(id){
   const rows=CATS.map(cat=>{const sc=p.s[cat.key];if(sc==null)return'';
     const lw = sc<=5 ? ((5-sc)/4)*100 : 0;
     const rw = sc>=5 ? ((sc-5)/5)*100 : 0;
-    return`<div class="br"><div class="rl">${cat.label}</div><div class="tl2"><div class="bl2" data-w="${lw}" style="background:linear-gradient(270deg,${col},${col}99)"></div></div><div class="sn" style="color:${col}">${sc}</div><div class="tr2"><div class="brr" data-w="${rw}" style="background:linear-gradient(90deg,${col},${col}99)"></div></div><div class="mx">/10</div></div>`;}).join('');
+    return`<div class="br"><div class="rl">${cat.label}</div><div class="tl2"><div class="bl2" data-w="${lw}" data-color="linear-gradient(270deg,${col},${col}99)" style="background:linear-gradient(270deg,${col},${col}99)"></div></div><div class="sn" style="color:${col}">${sc}</div><div class="tr2"><div class="brr" data-w="${rw}" style="background:linear-gradient(90deg,${col},${col}99)"></div></div><div class="mx">/10</div></div>`;}).join('');
   const evs=p.ev.map(ev=>`<div class="ei"><div class="ec" style="color:${col}">${ev.c}</div><div><div class="eq">「${ev.q}」</div><div class="er">📌 ${ev.src}（${ev.d}）</div></div></div>`).join('');
   const xv=(p.x>0?'+':'')+p.x, yv=(p.y>0?'+':'')+p.y;
   document.getElementById('bfc').innerHTML=`
@@ -430,7 +409,8 @@ function openBF(id){
     document.querySelectorAll('.br').forEach((row,i)=>setTimeout(()=>{
       row.classList.add('vis');
       const br=row.querySelector('.brr'),bl=row.querySelector('.bl2');
-      if(br)br.style.width=br.dataset.w+'%'; if(bl)bl.style.width=bl.dataset.w+'%';
+      if(br)br.style.width=br.dataset.w+'%'; 
+      if(bl){bl.style.width=bl.dataset.w+'%'; if(bl.dataset.color) bl.style.background=bl.dataset.color;}
     },i*100));
   },60));
 }
