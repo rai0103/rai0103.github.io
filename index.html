@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>政治家マップ</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#07090f;color:#dce4f0;font-family:sans-serif;}
+body{display:flex;flex-direction:column;}
+#hdr{flex:0 0 50px;background:#0e1118;border-bottom:1px solid #1e2535;display:flex;align-items:center;justify-content:space-between;padding:0 14px;}
+.logo{font-size:20px;font-weight:900;color:#fff;cursor:pointer;user-select:none;}
+.logo span{color:#c9a84c;}
+#dt{font-size:10px;color:#5a6a88;}
+#dt b{color:#3dd68c;}
+#sa{flex:0 0 auto;padding:10px 12px 0;position:relative;z-index:15;}
+#sb{display:flex;align-items:center;background:#0e1118;border:1px solid #2c3550;}
+#sb:focus-within{border-color:#c9a84c;}
+#sb em{padding:0 8px;color:#5a6a88;font-style:normal;}
+#si{flex:1;background:none;border:none;outline:none;color:#dce4f0;font-size:14px;padding:10px 0;}
+#si::placeholder{color:#5a6a88;}
+#sc{display:none;padding:0 10px;background:none;border:none;color:#5a6a88;font-size:16px;cursor:pointer;}
+#dd{display:none;position:absolute;top:calc(100% + 2px);left:12px;right:12px;background:#141820;border:1px solid #2c3550;box-shadow:0 12px 40px rgba(0,0,0,.8);max-height:200px;overflow-y:auto;z-index:100;}
+#dd.open{display:block;}
+.ddi{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer;border-bottom:1px solid #1e2535;font-size:13px;font-weight:700;}
+.ddi:hover,.ddi.hi{background:rgba(201,168,76,.08);}
+.ddm{font-size:10px;text-align:right;line-height:1.5;}
+#fa{flex:0 0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px 0;}
+.fl{font-size:10px;color:#5a6a88;}
+.fb{padding:4px 10px;font-size:11px;background:none;border:1px solid #2c3550;color:#5a6a88;cursor:pointer;border-radius:2px;white-space:nowrap;transition:all .15s;}
+.fb:hover{border-color:#dce4f0;color:#dce4f0;}
+.fb.on{background:rgba(201,168,76,.12);border-color:#c9a84c;color:#c9a84c;}
+
+/* THE KEY: canvas wrapper fills remaining flex space.
+   Canvas is inside it with explicit px size set by JS.
+   No position:absolute — canvas is a normal block element. */
+#ma{flex:1 1 0;min-height:0;overflow:hidden;margin:8px 12px 0;}
+#cv{display:block;cursor:pointer;}
+
+#st{flex:0 0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:5px 12px;border-top:1px solid #1e2535;font-size:10px;color:#5a6a88;gap:4px;}
+#sl{display:flex;flex-wrap:wrap;gap:4px 10px;}
+.sci{display:flex;align-items:center;gap:4px;}
+.scd{width:7px;height:7px;border-radius:50%;}
+
+/* popup - centered modal on mobile */
+#pop{display:none;position:fixed;inset:0;z-index:600;align-items:center;justify-content:center;padding:20px;}
+#pop.on{display:flex;}
+#pop-bg{position:absolute;inset:0;background:rgba(0,0,0,.5);}
+.pc{position:relative;z-index:1;width:100%;max-width:320px;background:#141820;border:1px solid #2c3550;box-shadow:0 20px 60px rgba(0,0,0,.9);}
+.pb{height:3px;}
+.pbd{display:flex;gap:12px;padding:14px;}
+.pp{width:66px;height:66px;flex-shrink:0;background:#0e1118;border:1px solid #2c3550;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;}
+.pp img{width:100%;height:100%;object-fit:cover;object-position:top;display:block;}
+.pi{flex:1;min-width:0;}
+.pn{font-size:19px;font-weight:900;color:#fff;margin-bottom:2px;}
+.pen{font-size:9px;color:#5a6a88;margin-bottom:6px;letter-spacing:.08em;}
+.pbg{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;margin-bottom:5px;}
+.pdt{font-size:10px;color:#5a6a88;line-height:1.6;}
+.pco{display:flex;gap:10px;padding:10px 14px;background:rgba(0,0,0,.3);border-top:1px solid #1e2535;}
+.pcol{flex:1;text-align:center;}
+.pclb{font-size:9px;color:#5a6a88;margin-bottom:2px;}
+.pcv{font-family:monospace;font-size:15px;font-weight:700;}
+.pak{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;background:none;border:none;border-top:1px solid #1e2535;width:100%;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.06em;}
+.pak:hover{background:rgba(255,255,255,.04);}
+.pxb{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.5);border:none;color:#888;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+/* butterfly */
+#bf{position:fixed;inset:0;background:#07090f;z-index:400;overflow-y:auto;display:none;}
+#bf.on{display:block;}
+.bfc{max-width:700px;margin:0 auto;padding:20px 16px 60px;}
+.bk{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid #2c3550;color:#5a6a88;font-size:11px;padding:6px 14px;cursor:pointer;margin-bottom:18px;}
+.bk:hover{border-color:#c9a84c;color:#c9a84c;}
+.bh{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-bottom:14px;border-bottom:1px solid #1e2535;margin-bottom:20px;}
+.bn{font-size:28px;font-weight:900;color:#fff;line-height:1;}
+.bba{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;margin:6px 0;}
+.bm{font-size:11px;color:#5a6a88;line-height:1.7;}
+.bm b{font-family:monospace;color:#e8354a;}
+.btit{font-size:10px;letter-spacing:.2em;color:#5a6a88;margin-bottom:12px;}
+.br{display:grid;grid-template-columns:100px 1fr 34px 1fr 30px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);opacity:0;transition:opacity .5s,transform .5s;transform:translateX(-10px);}
+@media(max-width:480px){.br{grid-template-columns:76px 1fr 30px 1fr 24px;}}
+.br.vis{opacity:1;transform:translateX(0);}
+.rl{font-size:11px;font-weight:700;text-align:right;padding-right:10px;line-height:1.3;color:#dce4f0;}
+.tl2{display:flex;align-items:center;justify-content:flex-end;}
+.bl2{height:5px;background:rgba(74,127,232,.15);border:1px solid rgba(74,127,232,.2);border-radius:1px;width:0;transition:width 1.2s cubic-bezier(.16,1,.3,1);}
+.sn{font-family:monospace;font-size:20px;line-height:1;text-align:center;}
+.tr2{display:flex;align-items:center;}
+.brr{height:5px;border-radius:1px;width:0;transition:width 1.2s cubic-bezier(.16,1,.3,1);}
+.mx{font-size:9px;color:#5a6a88;padding-left:4px;}
+.es{margin-top:24px;border-top:1px solid #1e2535;padding-top:14px;}
+.et{background:none;border:1px solid #2c3550;color:#5a6a88;font-size:11px;padding:6px 14px;cursor:pointer;}
+.et:hover{border-color:#c9a84c;color:#c9a84c;}
+.eb{display:none;margin-top:14px;}
+.eb.open{display:block;}
+.ei{display:grid;grid-template-columns:76px 1fr;gap:8px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.ec{font-size:10px;font-weight:700;}
+.eq{font-size:11px;line-height:1.7;}
+.er{margin-top:3px;font-size:9px;color:#5a6a88;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:#2c3550;border-radius:2px;}
+</style>
+</head>
+<body>
+<div id="hdr">
+  <div class="logo" onclick="goHome()">政治家<span>マップ</span></div>
+  <div id="dt"></div>
+</div>
+<div id="sa">
+  <div id="sb">
+    <em>🔍</em>
+    <input id="si" type="text" placeholder="政治家名・政党名で検索" autocomplete="off"
+      oninput="onI(this.value)" onkeydown="onK(event)">
+    <button id="sc" onclick="clrS()">✕</button>
+  </div>
+  <div id="dd"></div>
+</div>
+<div id="fa">
+  <span class="fl">絞込:</span>
+  <button class="fb on" data-p="all"        onclick="setF('all',this)">全員</button>
+  <button class="fb" data-p="自由民主党"    onclick="setF('自由民主党',this)">自民</button>
+  <button class="fb" data-p="立憲民主党"    onclick="setF('立憲民主党',this)">立憲</button>
+  <button class="fb" data-p="日本維新の会"  onclick="setF('日本維新の会',this)">維新</button>
+  <button class="fb" data-p="公明党"        onclick="setF('公明党',this)">公明</button>
+  <button class="fb" data-p="日本共産党"    onclick="setF('日本共産党',this)">共産</button>
+  <button class="fb" data-p="国民民主党"    onclick="setF('国民民主党',this)">国民</button>
+  <button class="fb" data-p="れいわ新選組"  onclick="setF('れいわ新選組',this)">れいわ</button>
+</div>
+<div id="ma"><canvas id="cv"></canvas></div>
+<div id="st"><div id="sl"></div><div>点をタップ → 詳細</div></div>
+
+<!-- popup -->
+<div id="pop">
+  <div id="pop-bg" onclick="clrP()"></div>
+  <div class="pc">
+    <button class="pxb" onclick="clrP()">✕</button>
+    <div class="pb" id="pb"></div>
+    <div class="pbd">
+      <div class="pp" id="pp"></div>
+      <div class="pi">
+        <div class="pn"  id="pn"></div>
+        <div class="pen" id="pe"></div>
+        <div class="pbg" id="pg"></div>
+        <div class="pdt" id="pd"></div>
+      </div>
+    </div>
+    <div class="pco">
+      <div class="pcol"><div class="pclb">経済・安保</div><div class="pcv" id="px2"></div></div>
+      <div style="width:1px;background:#1e2535"></div>
+      <div class="pcol"><div class="pclb">社会・文化</div><div class="pcv" id="py2"></div></div>
+    </div>
+    <button class="pak" id="pa"><span>詳細チャートを見る</span><span>→</span></button>
+  </div>
+</div>
+
+<!-- butterfly -->
+<div id="bf"><div class="bfc" id="bfc"></div></div>
+
+<script>
+/* ── party colors ── */
+const PCOL={'自由民主党':'#e8354a','立憲民主党':'#4a7fe8','日本維新の会':'#00d4ff','公明党':'#f0c040','日本共産党':'#ff6b35','国民民主党':'#3dd68c','れいわ新選組':'#a78bfa'};
+function pc(p){if(!p)return'#7a8899';for(const[k,v]of Object.entries(PCOL))if(p.includes(k))return v;return'#7a8899';}
+
+const CATS=[{key:'security',label:'日米安保・防衛'},{key:'economy',label:'経済政策'},{key:'imperial',label:'皇室制度'},{key:'surname',label:'夫婦別姓'},{key:'gender',label:'ジェンダー政策'}];
+
+const PH={takaichi:'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Sanae_Takaichi_20211008.jpg/240px-Sanae_Takaichi_20211008.jpg',abe:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Shinzo_Abe_Official.jpg/240px-Shinzo_Abe_Official.jpg',kishida:'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Fumio_Kishida_20211004.jpg/240px-Fumio_Kishida_20211004.jpg',ishiba:'https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Shigeru_Ishiba_20241001.jpg/240px-Shigeru_Ishiba_20241001.jpg',kono:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Taro_Kono_20211004.jpg/240px-Taro_Kono_20211004.jpg',edano:'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Yukio_Edano_20171006.jpg/240px-Yukio_Edano_20171006.jpg',izumi:'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Kenta_Izumi_20211130.jpg/240px-Kenta_Izumi_20211130.jpg',baba:'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Nobuyuki_Baba_20220710.jpg/240px-Nobuyuki_Baba_20220710.jpg',yamaguchi:'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Natsuo_Yamaguchi_20211104.jpg/240px-Natsuo_Yamaguchi_20211104.jpg',shii:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Kazuo_Shii_20221025.jpg/240px-Kazuo_Shii_20221025.jpg',tamaki:'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Yuichiro_Tamaki_20221023.jpg/240px-Yuichiro_Tamaki_20221023.jpg',yamamoto:'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Taro_Yamamoto_20130728.jpg/240px-Taro_Yamamoto_20130728.jpg'};
+
+const DATA=[
+  {id:'takaichi',name:'高市早苗',en:'TAKAICHI SANAE',party:'自由民主党',house:'衆議院',area:'奈良2区',x:7.5,y:8.5,s:{security:9,economy:7,imperial:9,surname:9,gender:8},ev:[{c:'日米安保・防衛',q:'核シェアリングの議論を行うべきだ',src:'自民総裁選討論会',d:'2021-09'},{c:'経済政策',q:'プライマリーバランス黒字化目標は凍結し国債発行で投資すべきだ',src:'著書',d:'2023'},{c:'皇室制度',q:'男系維持は絶対に譲れない一線だ',src:'総裁選出馬会見',d:'2021-09'},{c:'夫婦別姓',q:'選択的夫婦別姓は家族の一体感を損なう',src:'衆議院法務委員会',d:'2021-03'},{c:'ジェンダー政策',q:'女性の安全・安心が守られなければならない',src:'自民党内議連',d:'2023-05'}]},
+  {id:'abe',name:'安倍晋三',en:'ABE SHINZO',party:'自由民主党',house:'衆議院（故）',area:'山口4区',x:7.0,y:8.0,s:{security:9,economy:6,imperial:9,surname:9,gender:7},ev:[{c:'日米安保・防衛',q:'積極的平和主義のもと、日米同盟を強化する',src:'施政方針演説',d:'2017-01'},{c:'経済政策',q:'大胆な金融政策・機動的な財政政策・民間投資を喚起する成長戦略',src:'アベノミクス演説',d:'2013-02'},{c:'皇室制度',q:'皇統を守ることは国の根幹だ',src:'産経新聞',d:'2021-10'},{c:'夫婦別姓',q:'家族の絆を大切にする観点から慎重に議論すべき',src:'国会答弁',d:'2015-10'},{c:'ジェンダー政策',q:'女性が輝く社会をつくる',src:'成長戦略スピーチ',d:'2013-04'}]},
+  {id:'kishida',name:'岸田文雄',en:'KISHIDA FUMIO',party:'自由民主党',house:'衆議院',area:'広島1区',x:3.0,y:5.0,s:{security:7,economy:5,imperial:7,surname:5,gender:5},ev:[{c:'日米安保・防衛',q:'防衛費のGDP比2%への増額を目指す',src:'国会答弁',d:'2022-12'},{c:'経済政策',q:'新しい資本主義で成長と分配の好循環を実現する',src:'所信表明演説',d:'2021-10'},{c:'皇室制度',q:'皇位の安定的継承は重要な課題だ',src:'国会答弁',d:'2022-01'},{c:'夫婦別姓',q:'国民の意見を丁寧に聞きながら検討する',src:'衆院予算委員会',d:'2021-10'},{c:'ジェンダー政策',q:'女性活躍をあらゆる分野で推進する',src:'所信表明演説',d:'2021-10'}]},
+  {id:'ishiba',name:'石破茂',en:'ISHIBA SHIGERU',party:'自由民主党',house:'衆議院',area:'鳥取1区',x:0.0,y:3.0,s:{security:6,economy:4,imperial:6,surname:5,gender:4},ev:[{c:'日米安保・防衛',q:'アジア版NATOの創設を真剣に議論すべきだ',src:'著書',d:'2024'},{c:'経済政策',q:'地方創生こそ日本再生の道だ',src:'総裁選政策発表',d:'2024-09'},{c:'皇室制度',q:'安定的な皇位継承は重要だが幅広い議論が必要',src:'メディアインタビュー',d:'2023'},{c:'夫婦別姓',q:'選択的夫婦別姓は認められるべきだと考える',src:'産経新聞',d:'2021'},{c:'ジェンダー政策',q:'女性の政治参加を積極的に推進すべき',src:'講演',d:'2023'}]},
+  {id:'kono',name:'河野太郎',en:'KONO TARO',party:'自由民主党',house:'衆議院',area:'神奈川15区',x:5.0,y:2.0,s:{security:7,economy:7,imperial:5,surname:3,gender:4},ev:[{c:'日米安保・防衛',q:'敵基地攻撃能力の保有は抑止力として必要だ',src:'防衛大臣会見',d:'2021-10'},{c:'経済政策',q:'規制改革こそが日本経済の競争力を高める',src:'行政改革担当大臣会見',d:'2020-11'},{c:'皇室制度',q:'女系天皇について議論すべき時期が来ている',src:'個人ブログ',d:'2021'},{c:'夫婦別姓',q:'選択的夫婦別姓は実現すべきだ',src:'X（旧Twitter）',d:'2021-02'},{c:'ジェンダー政策',q:'LGBTQへの理解促進は必要だ',src:'メディアインタビュー',d:'2023'}]},
+  {id:'edano',name:'枝野幸男',en:'EDANO YUKIO',party:'立憲民主党',house:'衆議院',area:'埼玉5区',x:-5.0,y:-4.0,s:{security:3,economy:3,imperial:3,surname:2,gender:3},ev:[{c:'日米安保・防衛',q:'専守防衛の原則を守り軍事力の拡大には慎重であるべきだ',src:'立憲民主党代表会見',d:'2021-10'},{c:'経済政策',q:'経済的格差を是正し分厚い中間層を取り戻す',src:'衆院予算委員会',d:'2022-02'},{c:'皇室制度',q:'女性・女系天皇を認めるべきだ',src:'国会答弁',d:'2021-12'},{c:'夫婦別姓',q:'選択的夫婦別姓の実現を強く求める',src:'立憲民主党政策発表',d:'2021-10'},{c:'ジェンダー政策',q:'LGBT差別解消法の早期制定が必要だ',src:'国会答弁',d:'2023-05'}]},
+  {id:'izumi',name:'泉健太',en:'IZUMI KENTA',party:'立憲民主党',house:'衆議院',area:'京都3区',x:-4.0,y:-3.5,s:{security:3,economy:3,imperial:3,surname:2,gender:3},ev:[{c:'日米安保・防衛',q:'防衛費増額より外交努力で平和を守るべきだ',src:'代表会見',d:'2022-12'},{c:'経済政策',q:'消費税減税で家計を直接支援する',src:'立憲民主党政策発表',d:'2022-07'},{c:'皇室制度',q:'女系天皇を含む幅広い議論が必要だ',src:'党首討論',d:'2023-05'},{c:'夫婦別姓',q:'選択的夫婦別姓の早期実現を目指す',src:'代表会見',d:'2023-03'},{c:'ジェンダー政策',q:'多様性を尊重する社会の実現に取り組む',src:'政策パンフレット',d:'2023'}]},
+  {id:'baba',name:'馬場伸幸',en:'BABA NOBUYUKI',party:'日本維新の会',house:'衆議院',area:'大阪17区',x:5.0,y:-0.5,s:{security:6,economy:8,imperial:5,surname:4,gender:5},ev:[{c:'日米安保・防衛',q:'防衛費増額は必要だが使途の透明性が重要だ',src:'国会代表質問',d:'2023-01'},{c:'経済政策',q:'身を切る改革なくして増税なしが維新の基本だ',src:'維新大会スピーチ',d:'2023-03'},{c:'皇室制度',q:'旧宮家の皇籍復帰も含めた検討が必要だ',src:'国会答弁',d:'2022-11'},{c:'夫婦別姓',q:'選択的夫婦別姓に賛成だ',src:'国会答弁',d:'2023-03'},{c:'ジェンダー政策',q:'LGBT理解増進法は必要だと考える',src:'維新大会',d:'2023-03'}]},
+  {id:'yamaguchi',name:'山口那津男',en:'YAMAGUCHI NATSUO',party:'公明党',house:'参議院',area:'比例区',x:1.0,y:4.0,s:{security:5,economy:4,imperial:6,surname:4,gender:4},ev:[{c:'日米安保・防衛',q:'専守防衛を堅持しつつ抑止力を高める',src:'公明党大会',d:'2023-01'},{c:'経済政策',q:'中小企業支援と社会保障の充実が公明党の使命だ',src:'参院予算委員会',d:'2023-03'},{c:'皇室制度',q:'安定的な皇位継承の議論を進めるべきだ',src:'国会答弁',d:'2022-01'},{c:'夫婦別姓',q:'選択的夫婦別姓の実現に向け取り組む',src:'公明新聞',d:'2023-02'},{c:'ジェンダー政策',q:'共生社会の実現に向けて取り組む',src:'公明党大会',d:'2023'}]},
+  {id:'shii',name:'志位和夫',en:'SHII KAZUO',party:'日本共産党',house:'衆議院',area:'比例南関東',x:-8.0,y:-8.0,s:{security:1,economy:1,imperial:1,surname:1,gender:2},ev:[{c:'日米安保・防衛',q:'日米安保条約の廃棄を求める',src:'共産党大会決議',d:'2022-01'},{c:'経済政策',q:'大企業・富裕層への課税強化で社会保障を充実する',src:'衆院予算委員会',d:'2023-02'},{c:'皇室制度',q:'象徴天皇制については国民的な議論が必要だ',src:'代表会見',d:'2021-11'},{c:'夫婦別姓',q:'選択的夫婦別姓は直ちに実現すべきだ',src:'国会答弁',d:'2021-03'},{c:'ジェンダー政策',q:'LGBT差別禁止法の制定を求める',src:'国会答弁',d:'2023-05'}]},
+  {id:'tamaki',name:'玉木雄一郎',en:'TAMAKI YUICHIRO',party:'国民民主党',house:'衆議院',area:'香川2区',x:2.0,y:-2.0,s:{security:5,economy:6,imperial:5,surname:3,gender:4},ev:[{c:'日米安保・防衛',q:'防衛費増額は必要だが財源は増税でなく国債で',src:'国会答弁',d:'2022-12'},{c:'経済政策',q:'手取りを増やす。これが国民民主の最大の目標だ',src:'代表会見',d:'2024-10'},{c:'皇室制度',q:'安定的な皇位継承のために冷静に議論すべきだ',src:'メディアインタビュー',d:'2022'},{c:'夫婦別姓',q:'選択的夫婦別姓に賛成の立場だ',src:'代表会見',d:'2023-03'},{c:'ジェンダー政策',q:'多様性を認める社会を目指す',src:'国民民主党政策発表',d:'2023'}]},
+  {id:'yamamoto',name:'山本太郎',en:'YAMAMOTO TARO',party:'れいわ新選組',house:'参議院',area:'比例区',x:-7.0,y:-7.0,s:{security:2,economy:1,imperial:2,surname:1,gender:2},ev:[{c:'日米安保・防衛',q:'軍事費を削って生活に投資すべきだ',src:'参院予算委員会',d:'2023-03'},{c:'経済政策',q:'消費税廃止と積極財政で日本経済を立て直す',src:'れいわ政策発表',d:'2022-07'},{c:'皇室制度',q:'男系・女系より国民の生活優先が我々の立場だ',src:'代表会見',d:'2022'},{c:'夫婦別姓',q:'選択的夫婦別姓は直ちに実現すべきだ',src:'国会答弁',d:'2021-03'},{c:'ジェンダー政策',q:'全ての差別を許さない社会をつくる',src:'れいわ政策',d:'2023'}]},
+];
+
+let fP='all', hlId=null, popId=null, ddL=[], ddI=-1, hits=[];
+
+/* ════ CANVAS DRAW ════
+   CRITICAL: DPR=1 always. Do NOT use window.devicePixelRatio.
+   Android Chrome dpr=2.625 causes canvas corruption with setTransform.
+   We use CSS pixels = canvas pixels directly (1:1).
+   The browser upscales via CSS naturally.
+*/
+function draw(){
+  const ma=document.getElementById('ma');
+  const W=ma.clientWidth;
+  const H=ma.clientHeight;
+  if(!W||!H){ requestAnimationFrame(draw); return; }
+
+  const cv=document.getElementById('cv');
+  // 1:1 mapping — no DPR scaling at all
+  cv.width =W;
+  cv.height=H;
+  cv.style.width =W+'px';
+  cv.style.height=H+'px';
+
+  const ctx=cv.getContext('2d');
+  // no ctx.scale() — 1:1
+
+  const SC=Math.min(W,H)/2/10*0.84;
+  const tx=v=>W/2+v*SC;
+  const ty=v=>H/2-v*SC;
+
+  // background
+  ctx.fillStyle='#07090f';
+  ctx.fillRect(0,0,W,H);
+
+  // quadrant tints
+  ctx.fillStyle='rgba(232,53,74,.05)';  ctx.fillRect(W/2,0,W/2,H/2);
+  ctx.fillStyle='rgba(201,168,76,.02)'; ctx.fillRect(0,0,W/2,H/2);
+  ctx.fillStyle='rgba(74,127,232,.05)'; ctx.fillRect(0,H/2,W/2,H/2);
+  ctx.fillStyle='rgba(80,80,120,.02)';  ctx.fillRect(W/2,H/2,W/2,H/2);
+
+  // grid
+  ctx.strokeStyle='#1e2535'; ctx.lineWidth=0.5;
+  for(let v=-8;v<=8;v+=2){
+    if(!v) continue;
+    ctx.beginPath(); ctx.moveTo(tx(v),0);  ctx.lineTo(tx(v),H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,ty(v));  ctx.lineTo(W,ty(v)); ctx.stroke();
+  }
+
+  // axes
+  ctx.strokeStyle='#3a4560'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(0,H/2); ctx.lineTo(W,H/2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2,H); ctx.stroke();
+
+  // labels
+  const fs=W<420?11:13;
+  ctx.font='bold '+fs+'px sans-serif';
+  ctx.fillStyle='#e8354a'; ctx.textAlign='center'; ctx.textBaseline='top';    ctx.fillText('保守',W/2,4);
+  ctx.fillStyle='#4a7fe8'; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText('リベラル',W/2,H-2);
+  ctx.fillStyle='#e8354a'; ctx.textAlign='right';  ctx.textBaseline='middle'; ctx.fillText('タカ派',W-4,H/2-fs-4);
+  ctx.fillStyle='#4a7fe8'; ctx.textAlign='left';   ctx.textBaseline='middle'; ctx.fillText('ハト派',4,H/2-fs-4);
+  ctx.font=(W<420?9:10)+'px sans-serif'; ctx.fillStyle='#252d45';
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  ctx.fillText('保守×タカ派',W*.75,H*.04);  ctx.fillText('保守×ハト派',W*.25,H*.04);
+  ctx.fillText('リベラル×ハト派',W*.2,H*.88); ctx.fillText('リベラル×タカ派',W*.75,H*.88);
+
+  // dots
+  hits=[];
+  const show=fP==='all'?DATA:DATA.filter(p=>p.party===fP);
+  show.filter(p=>p.id!==hlId).forEach(p=>dot(ctx,p,false,tx,ty,W,H));
+  if(hlId){ const hp=DATA.find(p=>p.id===hlId); if(hp&&(fP==='all'||hp.party===fP)) dot(ctx,hp,true,tx,ty,W,H); }
+
+  // status
+  const cnt={}; show.forEach(p=>cnt[p.party]=(cnt[p.party]||0)+1);
+  document.getElementById('sl').innerHTML=Object.entries(cnt).map(([p,n])=>
+    `<div class="sci"><div class="scd" style="background:${pc(p)}"></div><span style="color:${pc(p)};font-weight:700">${p} ${n}名</span></div>`).join('');
+}
+
+function dot(ctx,p,hl,tx,ty,W,H){
+  const col=pc(p.party);
+  const px=tx(p.x), py=ty(p.y);
+  const r=hl?9:(W<420?5:6);
+  const alpha=hl?1:(hlId?0.3:0.85);
+
+  hits.push({p,cx:px,cy:py,r:r+8});
+
+  // glow
+  if(hl){
+    const g=ctx.createRadialGradient(px,py,0,px,py,r*4);
+    g.addColorStop(0,col+'55'); g.addColorStop(1,col+'00');
+    ctx.beginPath(); ctx.arc(px,py,r*4,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+    ctx.save(); ctx.strokeStyle=col+'44'; ctx.lineWidth=0.8; ctx.setLineDash([4,6]);
+    ctx.beginPath(); ctx.moveTo(px,2); ctx.lineTo(px,H-2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(2,py); ctx.lineTo(W-2,py); ctx.stroke();
+    ctx.restore();
+  }
+
+  // circle
+  ctx.globalAlpha=alpha;
+  ctx.beginPath(); ctx.arc(px,py,r,0,Math.PI*2);
+  ctx.fillStyle=hl?col:(hlId?'#3a4a5a':col); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=hl?2:1; ctx.stroke();
+  ctx.globalAlpha=1;
+
+  // label
+  const lfs=hl?11:8;
+  ctx.font=(hl?'bold ':'')+lfs+'px sans-serif';
+  const tw=ctx.measureText(p.name).width;
+  const lx=p.x>4?px-r-3-tw:px+r+3;
+  ctx.globalAlpha=hl?1:(hlId?0.3:0.9);
+  ctx.fillStyle='rgba(7,9,15,.88)';
+  ctx.textAlign='left'; ctx.textBaseline='middle';
+  for(let a=-2;a<=2;a++) for(let b=-2;b<=2;b++){if(a||b) ctx.fillText(p.name,lx+a,py+b);}
+  ctx.fillStyle=hl?'#fff':(hlId?'#777':'#ddd'); ctx.fillText(p.name,lx,py);
+  ctx.globalAlpha=1;
+}
+
+/* ════ CANVAS CLICK ════ */
+document.getElementById('cv').addEventListener('click',e=>{
+  const r=e.currentTarget.getBoundingClientRect();
+  const mx=e.clientX-r.left, my=e.clientY-r.top;
+  for(let i=hits.length-1;i>=0;i--){
+    const{p,cx,cy,r:hr}=hits[i];
+    if((mx-cx)**2+(my-cy)**2<=hr*hr){ hlId=p.id; draw(); openPop(p,e); return; }
+  }
+  clrP();
+});
+
+/* ════ POPUP ════ */
+function openPop(p,e){
+  popId=p.id; const col=pc(p.party);
+  document.getElementById('pb').style.background=`linear-gradient(90deg,${col},transparent)`;
+  const pp=document.getElementById('pp');
+  pp.style.cssText=`background:${col}18;color:${col}`;
+  pp.textContent=p.name[0];
+  if(PH[p.id]){
+    const img=new Image(); img.alt=p.name;
+    img.onload=()=>{pp.style.cssText='';pp.style.background='';pp.innerHTML='';pp.appendChild(img);};
+    img.src=PH[p.id];
+  }
+  document.getElementById('pn').textContent=p.name;
+  document.getElementById('pe').textContent=p.en;
+  const pg=document.getElementById('pg'); pg.textContent=p.party; pg.style.cssText=`background:${col}22;border:1px solid ${col}55;color:${col}`;
+  document.getElementById('pd').textContent=p.house+'　'+p.area;
+  const fv=v=>(v>0?'+':'')+v;
+  const ex=document.getElementById('px2'); ex.textContent=fv(p.x); ex.style.color=col;
+  const ey=document.getElementById('py2'); ey.textContent=fv(p.y); ey.style.color=col;
+  const pa=document.getElementById('pa'); pa.style.color=col; pa.onclick=()=>{clrP();openBF(p.id);};
+  document.getElementById('pop').classList.add('on');
+}
+function clrP(){
+  document.getElementById('pop').classList.remove('on'); popId=null;
+  if(hlId){hlId=null;draw();}
+}
+
+/* ════ SEARCH ════ */
+function onI(v){
+  document.getElementById('sc').style.display=v?'block':'none';
+  if(!v.trim()){closeDd();return;}
+  ddL=DATA.filter(p=>p.name.includes(v)||p.en.toLowerCase().includes(v.toLowerCase())||p.party.includes(v));
+  ddI=-1; renderDd(v.trim());
+}
+function renderDd(q){
+  const dd=document.getElementById('dd');
+  dd.innerHTML=ddL.length
+    ? ddL.slice(0,8).map(p=>`<div class="ddi" onclick="pickD('${p.id}')"><span>${p.name.replace(q,'<em style="color:#c9a84c;font-style:normal">'+q+'</em>')}</span><span class="ddm" style="color:${pc(p.party)}">${p.party}<br>${p.house}</span></div>`).join('')
+    : '<div style="padding:12px;font-size:12px;color:#5a6a88;text-align:center">見つかりません</div>';
+  dd.classList.add('open');
+}
+function onK(e){
+  const its=[...document.querySelectorAll('.ddi')];
+  if(e.key==='ArrowDown'){ddI=Math.min(ddI+1,its.length-1);its.forEach((x,i)=>x.classList.toggle('hi',i===ddI));e.preventDefault();}
+  else if(e.key==='ArrowUp'){ddI=Math.max(ddI-1,0);its.forEach((x,i)=>x.classList.toggle('hi',i===ddI));e.preventDefault();}
+  else if(e.key==='Enter'){if(ddI>=0&&ddL[ddI])pickD(ddL[ddI].id);else if(ddL.length===1)pickD(ddL[0].id);e.preventDefault();}
+  else if(e.key==='Escape')closeDd();
+}
+function pickD(id){
+  const p=DATA.find(x=>x.id===id); if(!p) return;
+  hlId=id; document.getElementById('si').value=p.name; document.getElementById('sc').style.display='block'; closeDd();
+  if(fP!=='all'&&p.party!==fP){fP='all';document.querySelectorAll('.fb').forEach(b=>b.classList.toggle('on',b.dataset.p==='all'));}
+  draw(); openPop(p,null);
+}
+function clrS(){document.getElementById('si').value='';document.getElementById('sc').style.display='none';closeDd();hlId=null;clrP();draw();}
+function closeDd(){document.getElementById('dd').classList.remove('open');}
+document.addEventListener('click',e=>{if(!e.target.closest('#sa'))closeDd();});
+
+/* ════ FILTER ════ */
+function setF(party,btn){
+  fP=party; document.querySelectorAll('.fb').forEach(b=>b.classList.toggle('on',b.dataset.p===party));
+  if(hlId&&party!=='all'){const p=DATA.find(x=>x.id===hlId);if(p&&p.party!==party){hlId=null;clrP();}}
+  draw();
+}
+
+/* ════ BUTTERFLY ════ */
+function openBF(id){
+  const p=DATA.find(x=>x.id===id); if(!p) return;
+  const col=pc(p.party);
+  const rows=CATS.map(cat=>{const sc=p.s[cat.key];if(sc==null)return'';
+    return`<div class="br"><div class="rl">${cat.label}</div><div class="tl2"><div class="bl2" data-w="${((10-sc)/10)*55}"></div></div><div class="sn" style="color:${col}">${sc}</div><div class="tr2"><div class="brr" data-w="${(sc/10)*100}" style="background:linear-gradient(90deg,${col},${col}99)"></div></div><div class="mx">/10</div></div>`;}).join('');
+  const evs=p.ev.map(ev=>`<div class="ei"><div class="ec" style="color:${col}">${ev.c}</div><div><div class="eq">「${ev.q}」</div><div class="er">📌 ${ev.src}（${ev.d}）</div></div></div>`).join('');
+  const xv=(p.x>0?'+':'')+p.x, yv=(p.y>0?'+':'')+p.y;
+  document.getElementById('bfc').innerHTML=`
+    <button class="bk" onclick="goHome()">← マップに戻る</button>
+    <div class="bh"><div><div class="bn">${p.name}</div><div style="font-size:9px;color:#5a6a88;letter-spacing:.1em">${p.en}</div></div>
+    <div style="text-align:right"><div class="bba" style="background:${col}22;border:1px solid ${col}55;color:${col}">${p.party}</div>
+    <div class="bm">${p.house} ／ ${p.area}<br>経済・安保 <b>${xv}</b> ／ 社会・文化 <b>${yv}</b></div></div></div>
+    <div class="btit">BUTTERFLY CHART — 政策スタンス指数</div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#5a6a88;margin-bottom:6px"><span>◀ リベラル側</span><span>保守・タカ派側 ▶</span></div>
+    <div style="height:1px;background:#1e2535;margin:8px 0 14px"></div>
+    ${rows}
+    <div class="es"><button class="et" onclick="togEv(this)">▶ エビデンスを表示</button>
+    <div class="eb" id="evb">${evs}<p style="margin-top:10px;font-size:9px;color:#5a6a88">⚠️ スコアは公開発言に基づく推定値。1＝リベラル・ハト派 / 10＝保守・タカ派</p></div></div>`;
+  document.getElementById('bf').classList.add('on');
+  document.getElementById('bf').scrollTop=0;
+  requestAnimationFrame(()=>setTimeout(()=>{
+    document.querySelectorAll('.br').forEach((row,i)=>setTimeout(()=>{
+      row.classList.add('vis');
+      const br=row.querySelector('.brr'),bl=row.querySelector('.bl2');
+      if(br)br.style.width=br.dataset.w+'%'; if(bl)bl.style.width=bl.dataset.w+'%';
+    },i*100));
+  },60));
+}
+function togEv(btn){const b=document.getElementById('evb');b.classList.toggle('open');btn.textContent=b.classList.contains('open')?'▼ エビデンスを閉じる':'▶ エビデンスを表示';}
+function goHome(){document.getElementById('bf').classList.remove('on'); requestAnimationFrame(draw);}
+
+/* ════ INIT ════ */
+const n=new Date();
+document.getElementById('dt').innerHTML='更新 <b>'+n.getFullYear()+'年'+String(n.getMonth()+1).padStart(2,'0')+'月</b>';
+// Triple rAF to ensure full layout before drawing
+requestAnimationFrame(()=>requestAnimationFrame(()=>requestAnimationFrame(draw)));
+let resizeTimer;
+window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(draw,300);});
+</script>
+</body>
+</html>
