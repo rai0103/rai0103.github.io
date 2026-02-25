@@ -101,7 +101,28 @@ body{display:flex;flex-direction:column;}
 </head>
 <body>
 <div id="hdr">
-  <div class="logo" onclick="goHome()">政治家<span>マップ</span></div>
+  <div class="logo" onclick="goHome()" style="display:flex;align-items:center;gap:8px;">
+    <svg width="32" height="28" viewBox="0 0 32 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- 国会議事堂シルエット -->
+      <!-- 中央ドーム -->
+      <ellipse cx="16" cy="10" rx="4" ry="5" fill="#c9a84c"/>
+      <rect x="14" y="10" width="4" height="4" fill="#c9a84c"/>
+      <!-- 中央塔 -->
+      <rect x="13" y="14" width="6" height="8" fill="#c9a84c"/>
+      <!-- 左棟 -->
+      <rect x="3" y="17" width="9" height="5" fill="#c9a84c"/>
+      <rect x="5" y="14" width="5" height="3" fill="#c9a84c"/>
+      <!-- 右棟 -->
+      <rect x="20" y="17" width="9" height="5" fill="#c9a84c"/>
+      <rect x="22" y="14" width="5" height="3" fill="#c9a84c"/>
+      <!-- 階段基部 -->
+      <rect x="1" y="22" width="30" height="2" fill="#c9a84c"/>
+      <rect x="0" y="24" width="32" height="2" fill="#c9a84c"/>
+      <!-- ドームの窓 -->
+      <ellipse cx="16" cy="9" rx="1.5" ry="2" fill="#07090f" opacity="0.5"/>
+    </svg>
+    政治家<span>マップ</span>
+  </div>
   <div id="dt"></div>
 </div>
 <div id="sa">
@@ -236,10 +257,24 @@ function draw(){
   ctx.fillStyle='#4a7fe8'; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText('リベラル',W/2,H-2);
   ctx.fillStyle='#e8354a'; ctx.textAlign='right';  ctx.textBaseline='middle'; ctx.fillText('タカ派',W-4,H/2-fs-4);
   ctx.fillStyle='#4a7fe8'; ctx.textAlign='left';   ctx.textBaseline='middle'; ctx.fillText('ハト派',4,H/2-fs-4);
-  ctx.font=(W<420?9:10)+'px sans-serif'; ctx.fillStyle='#252d45';
-  ctx.textAlign='center'; ctx.textBaseline='top';
-  ctx.fillText('保守×タカ派',W*.75,H*.04);  ctx.fillText('保守×ハト派',W*.25,H*.04);
-  ctx.fillText('リベラル×ハト派',W*.2,H*.88); ctx.fillText('リベラル×タカ派',W*.75,H*.88);
+  // quadrant labels - white with dark outline
+  const qlfs = W<420?10:12;
+  ctx.font = 'bold '+qlfs+'px sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  const qlabels = [
+    {t:'保守×タカ派',  x:W*.75, y:H*.07},
+    {t:'保守×ハト派',  x:W*.25, y:H*.07},
+    {t:'リベラル×ハト派', x:W*.22, y:H*.93},
+    {t:'リベラル×タカ派', x:W*.75, y:H*.93},
+  ];
+  qlabels.forEach(({t,x,y})=>{
+    ctx.fillStyle='rgba(0,0,0,0.7)';
+    for(let dx=-2;dx<=2;dx++) for(let dy=-2;dy<=2;dy++){
+      if(dx||dy) ctx.fillText(t, x+dx, y+dy);
+    }
+    ctx.fillStyle='rgba(255,255,255,0.75)';
+    ctx.fillText(t, x, y);
+  });
 
   // dots
   hits=[];
@@ -373,7 +408,9 @@ function openBF(id){
   const p=DATA.find(x=>x.id===id); if(!p) return;
   const col=pc(p.party);
   const rows=CATS.map(cat=>{const sc=p.s[cat.key];if(sc==null)return'';
-    return`<div class="br"><div class="rl">${cat.label}</div><div class="tl2"><div class="bl2" data-w="${((10-sc)/10)*55}"></div></div><div class="sn" style="color:${col}">${sc}</div><div class="tr2"><div class="brr" data-w="${(sc/10)*100}" style="background:linear-gradient(90deg,${col},${col}99)"></div></div><div class="mx">/10</div></div>`;}).join('');
+    const lw = sc<=5 ? ((5-sc)/4)*100 : 0;
+    const rw = sc>=5 ? ((sc-5)/5)*100 : 0;
+    return`<div class="br"><div class="rl">${cat.label}</div><div class="tl2"><div class="bl2" data-w="${lw}"></div></div><div class="sn" style="color:${col}">${sc}</div><div class="tr2"><div class="brr" data-w="${rw}" style="background:linear-gradient(90deg,${col},${col}99)"></div></div><div class="mx">/10</div></div>`;}).join('');
   const evs=p.ev.map(ev=>`<div class="ei"><div class="ec" style="color:${col}">${ev.c}</div><div><div class="eq">「${ev.q}」</div><div class="er">📌 ${ev.src}（${ev.d}）</div></div></div>`).join('');
   const xv=(p.x>0?'+':'')+p.x, yv=(p.y>0?'+':'')+p.y;
   document.getElementById('bfc').innerHTML=`
