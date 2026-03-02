@@ -238,7 +238,10 @@ body{display:flex;flex-direction:column;}
 
 <div id="hdr">
   <div class="logo" onclick="goHome()">政治家<span>マップ</span></div>
-  <div id="dt"></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div id="dt"></div>
+    <button id="quiz-hdr-btn" onclick="onQuizHdrBtn()" style="padding:5px 10px;background:#3dd68c22;border:1px solid #3dd68c55;color:#3dd68c;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;letter-spacing:.04em">🗳️ 自分の位置を測る</button>
+  </div>
 </div>
 
 <!-- ③ 常時表示の注意書き -->
@@ -2145,7 +2148,7 @@ function renderUserPanel(){
     const pct = Math.round(Math.max(0, 100 - d * 7));
     const isCmp = cmp && cmp.id === p.id;
     return '<div class="up-near-item" style="border-color:' + (isCmp ? col2 + '88' : '#2c3550') + ';background:' + (isCmp ? col2 + '18' : '#0e1118') + '"'
-      + ' onclick="_upCmpId='' + (isCmp ? '' : p.id) + '';if(!_upCmpId)_upCmpId=null;renderUserPanel();document.getElementById('user-panel').scrollTop=0">'
+      + ' onclick="_upCmpId=' + (isCmp ? 'null' : ('\'' + p.id + '\'')) + ';renderUserPanel();document.getElementById(\'user-panel\').scrollTop=0">'
       + '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:' + (isCmp ? col2 : '#dce4f0') + '">' + p.name + '</div>'
       + '<div style="font-size:9px;color:' + col2 + ';margin-top:1px">' + p.party + '</div></div>'
       + '<div style="display:flex;align-items:center;gap:8px">'
