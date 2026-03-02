@@ -2053,6 +2053,259 @@ window.addEventListener('load', ()=>{
 });
 let resizeTimer;
 window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(draw,300);});
+const QUIZ_QUESTIONS = [
+  /* ── 日米安保・防衛（Y軸寄り） ── */
+  { cat:'security', axis:'y',
+    q:'日本の防衛費をGDP比2%以上に増額すべきだ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[+8,+4,0,-4,-8] },
+  { cat:'security', axis:'y',
+    q:'日本は憲法9条を改正し、自衛隊を軍として明記すべきだ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[+8,+4,0,-4,-8] },
+  { cat:'security', axis:'y',
+    q:'敵基地攻撃能力（反撃能力）の保有は必要だ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[+8,+4,0,-4,-8] },
+
+  /* ── 対中政策（Y軸寄り） ── */
+  { cat:'china', axis:'y',
+    q:'中国の軍事的脅威に対し、日本はより強硬な姿勢で対応すべきだ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[+8,+4,0,-4,-8] },
+  { cat:'china', axis:'y',
+    q:'尖閣諸島問題は外交交渉より実力で守るべきだ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[+8,+4,0,-4,-8] },
+
+  /* ── 対ロ政策（Y軸寄り） ── */
+  { cat:'russia', axis:'y',
+    q:'ロシアへの経済制裁を強化し続けるべきだ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[+8,+4,0,-4,-8] },
+
+  /* ── 沖縄基地問題（X軸寄り） ── */
+  { cat:'okinawa', axis:'x',
+    q:'沖縄の米軍基地は日本の安全保障上、必要不可欠だ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[+8,+4,0,-4,-8] },
+  { cat:'okinawa', axis:'x',
+    q:'辺野古への移設工事は沖縄の民意を踏まえ中止すべきだ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[-8,-4,0,+4,+8] },
+
+  /* ── 原発政策（X軸寄り） ── */
+  { cat:'nuclear', axis:'x',
+    q:'エネルギー安全保障のために原子力発電を積極活用すべきだ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[+8,+4,0,-4,-8] },
+  { cat:'nuclear', axis:'x',
+    q:'日本は将来的に原発ゼロを目指すべきだ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[-8,-4,0,+4,+8] },
+
+  /* ── 経済政策（X軸寄り） ── */
+  { cat:'economy', axis:'x',
+    q:'消費税は段階的に廃止・引き下げすべきだ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[-8,-4,0,+4,+8] },
+  { cat:'economy', axis:'x',
+    q:'規制緩和と民間活力こそが経済成長の主な手段だ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[+8,+4,0,-4,-8] },
+  { cat:'economy', axis:'x',
+    q:'富裕層・大企業への課税を強化し、再分配を増やすべきだ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[-8,-4,0,+4,+8] },
+
+  /* ── 皇室制度（X軸強め） ── */
+  { cat:'imperial', axis:'x',
+    q:'皇位継承は男系男子を維持すべきだ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[+8,+4,0,-4,-8] },
+  { cat:'imperial', axis:'x',
+    q:'女性天皇・女系天皇を認めるべきだ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[-8,-4,0,+4,+8] },
+
+  /* ── 夫婦別姓（X軸強め） ── */
+  { cat:'surname', axis:'x',
+    q:'選択的夫婦別姓を早期に実現すべきだ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[-8,-4,0,+4,+8] },
+  { cat:'surname', axis:'x',
+    q:'夫婦が同じ姓を名乗ることは家族の一体感のために重要だ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[+8,+4,0,-4,-8] },
+
+  /* ── ジェンダー政策（X軸強め） ── */
+  { cat:'gender', axis:'x',
+    q:'同性婚を法律で認めるべきだ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[-8,-4,0,+4,+8] },
+  { cat:'gender', axis:'x',
+    q:'政治・経済の意思決定において女性割合を義務付けるクォータ制を導入すべきだ',
+    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
+    scores:[-8,-4,0,+4,+8] },
+];
+
+const TOTAL_Q = QUIZ_QUESTIONS.length;
+let quizStep = 0;
+let quizAnswers = new Array(TOTAL_Q).fill(null); // null=未回答
+
+function openQuiz(){
+  quizStep = 0;
+  quizAnswers = new Array(TOTAL_Q).fill(null);
+  document.getElementById('quiz').style.display='flex';
+  renderQuizStep();
+}
+function closeQuiz(){
+  document.getElementById('quiz').style.display='none';
+}
+
+function renderQuizStep(){
+  const q = QUIZ_QUESTIONS[quizStep];
+  const ans = quizAnswers[quizStep];
+
+  // プログレス
+  const pct = Math.round((quizStep/TOTAL_Q)*100);
+  document.getElementById('quiz-prog-bar').style.width = pct+'%';
+  document.getElementById('quiz-prog-txt').textContent = `設問 ${quizStep+1} / ${TOTAL_Q}`;
+
+  // カテゴリラベル
+  const catNames = {
+    security:'日米安保・防衛', china:'対中政策', russia:'対ロ政策',
+    okinawa:'沖縄基地問題', nuclear:'原発政策', economy:'経済政策',
+    imperial:'皇室制度', surname:'夫婦別姓', gender:'ジェンダー政策'
+  };
+
+  const area = document.getElementById('quiz-q-area');
+  area.innerHTML = `
+    <div style="font-size:10px;font-weight:700;color:#c9a84c;letter-spacing:.1em;margin-bottom:10px;text-transform:uppercase">${catNames[q.cat]||q.cat}</div>
+    <div style="font-size:15px;font-weight:700;color:#dce4f0;line-height:1.6;margin-bottom:20px">${q.q}</div>
+    <div id="quiz-opts" style="display:flex;flex-direction:column;gap:8px">
+      ${q.opts.map((opt,i)=>`
+        <button onclick="quizSelect(${i})" data-i="${i}" style="
+          padding:12px 14px;text-align:left;font-size:13px;font-weight:${ans===i?'700':'400'};
+          background:${ans===i?'#3dd68c22':'#0e1118'};
+          border:1px solid ${ans===i?'#3dd68c':'#2c3550'};
+          color:${ans===i?'#3dd68c':'#b0bcd0'};cursor:pointer;
+          transition:all .15s;width:100%;
+        ">${opt}</button>
+      `).join('')}
+    </div>
+    <div style="margin-top:16px;font-size:10px;color:#3a4560;text-align:center">
+      どちらとも言えない場合は「どちらとも言えない」を選択してください
+    </div>
+  `;
+
+  // 戻るボタン
+  document.getElementById('quiz-back').style.display = quizStep===0?'none':'block';
+
+  // 次へボタン
+  const nextBtn = document.getElementById('quiz-next');
+  if(quizStep === TOTAL_Q-1){
+    nextBtn.textContent = '✅ 結果を見る';
+    nextBtn.style.background = ans!==null?'#c9a84c':'#2c3550';
+    nextBtn.style.color = ans!==null?'#07090f':'#5a6a88';
+  } else {
+    nextBtn.textContent = '次へ →';
+    nextBtn.style.background = ans!==null?'#3dd68c':'#2c3550';
+    nextBtn.style.color = ans!==null?'#07090f':'#5a6a88';
+  }
+}
+
+function quizSelect(i){
+  quizAnswers[quizStep] = i;
+  renderQuizStep();
+  // 自動で次へ（少し待って）
+  setTimeout(()=>{
+    if(quizStep < TOTAL_Q-1) quizNext();
+  }, 220);
+}
+
+function quizNext(){
+  if(quizAnswers[quizStep]===null){ 
+    // 未回答なら振動アニメ
+    const b = document.getElementById('quiz-q-area');
+    b.style.animation='none'; requestAnimationFrame(()=>{b.style.animation='quizShake .3s';});
+    return;
+  }
+  if(quizStep < TOTAL_Q-1){
+    quizStep++;
+    renderQuizStep();
+    document.getElementById('quiz-box').scrollTop=0;
+  } else {
+    // 最終ステップ → 結果計算
+    calcQuizResult();
+  }
+}
+
+function quizBack(){
+  if(quizStep>0){ quizStep--; renderQuizStep(); document.getElementById('quiz-box').scrollTop=0; }
+}
+
+/* ── スコア計算 ── */
+function calcQuizResult(){
+  // カテゴリ別スコア集計
+  const catScores = {};
+  const catCounts = {};
+  QUIZ_QUESTIONS.forEach((q,i)=>{
+    const a = quizAnswers[i];
+    if(a===null) return;
+    const s = q.scores[a];
+    if(!catScores[q.cat]) {catScores[q.cat]=0; catCounts[q.cat]=0;}
+    catScores[q.cat] += s;
+    catCounts[q.cat]++;
+  });
+
+  // カテゴリ別平均（-10〜+10）
+  const catAvg = {};
+  for(const k in catScores) catAvg[k] = catScores[k]/catCounts[k];
+
+  // X軸：保守↔リベラル（正=保守）
+  // 対象: okinawa(0.15) nuclear(0.10) economy(0.15) imperial(0.40) surname(0.30) gender(0.25)
+  const xWeights = {okinawa:0.15,nuclear:0.10,economy:0.15,imperial:0.40,surname:0.30,gender:0.25};
+  let xSum=0, xW=0;
+  for(const [k,w] of Object.entries(xWeights)){
+    if(catAvg[k]!=null){xSum+=catAvg[k]*w; xW+=w;}
+  }
+  const userX = xW>0 ? Math.max(-10,Math.min(10, Math.round(xSum/xW*10)/10)) : 0;
+
+  // Y軸：タカ↔ハト（正=タカ）
+  // 対象: security(0.55) china(0.25) russia(0.15)
+  const yWeights = {security:0.55,china:0.25,russia:0.15};
+  let ySum=0, yW=0;
+  for(const [k,w] of Object.entries(yWeights)){
+    if(catAvg[k]!=null){ySum+=catAvg[k]*w; yW+=w;}
+  }
+  const userY = yW>0 ? Math.max(-10,Math.min(10, Math.round(ySum/yW*10)/10)) : 0;
+
+  // カテゴリスコアを1〜10に変換（バタフライ用）
+  // -10→1, 0→5, +10→10
+  const toS = v => Math.max(1,Math.min(10, Math.round((v+10)/20*9)+1));
+  const userS = {};
+  for(const k of ['security','economy','china','russia','okinawa','nuclear','imperial','surname','gender']){
+    userS[k] = catAvg[k]!=null ? toS(catAvg[k]) : 5;
+  }
+
+  // 保存
+  window.USER_RESULT = {x:userX, y:userY, s:userS, catAvg};
+
+  closeQuiz();
+  showUserResult(userX, userY, userS);
+}
+
+
+function showUserResult(ux, uy, us){
+  window.USER_POS = {x:ux, y:uy};
+  draw();
+  updateQuizHdrBtn();
+  openUserPanel(null);
+}
+
+
+
 /* ═══════════════════════════════════
    ユーザー診断結果パネル
 ═══════════════════════════════════ */
@@ -2244,6 +2497,30 @@ function openUserBF(compareId){
 }
 
 </script>
+
+<div id="quiz" style="display:none;position:fixed;inset:0;z-index:950;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:16px;">
+  <div id="quiz-box" style="width:100%;max-width:500px;background:#141820;border:1px solid #2c3550;box-shadow:0 20px 60px rgba(0,0,0,.9);max-height:92vh;overflow-y:auto;position:relative;">
+    <!-- ヘッダー -->
+    <div style="background:#0e1118;border-bottom:1px solid #2c3550;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1">
+      <div>
+        <div style="font-size:13px;font-weight:900;color:#3dd68c">🗳️ 政治的ポジション診断</div>
+        <div id="quiz-prog-txt" style="font-size:10px;color:#5a6a88;margin-top:2px"></div>
+      </div>
+      <button onclick="closeQuiz()" style="background:none;border:none;color:#5a6a88;font-size:18px;cursor:pointer;padding:4px">✕</button>
+    </div>
+    <!-- プログレスバー -->
+    <div style="height:3px;background:#1e2535">
+      <div id="quiz-prog-bar" style="height:100%;background:#3dd68c;transition:width .3s;width:0%"></div>
+    </div>
+    <!-- 設問エリア -->
+    <div id="quiz-q-area" style="padding:20px 16px"></div>
+    <!-- ナビ -->
+    <div style="padding:12px 16px 20px;display:flex;gap:8px;border-top:1px solid #1e2535">
+      <button id="quiz-back" onclick="quizBack()" style="flex:0 0 80px;padding:10px;background:none;border:1px solid #2c3550;color:#5a6a88;font-size:12px;font-weight:700;cursor:pointer">← 戻る</button>
+      <button id="quiz-next" onclick="quizNext()" style="flex:1;padding:10px;background:#3dd68c;border:none;color:#07090f;font-size:13px;font-weight:900;cursor:pointer">次へ →</button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ ユーザー結果パネル ═══ -->
 <div id="user-panel">
