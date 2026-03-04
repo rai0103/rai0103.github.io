@@ -330,7 +330,7 @@ body{display:flex;flex-direction:column;}
   <div id="rpt-bg" onclick="closeRpt()"></div>
   <div class="rc">
     <h3>💬 エビデンスを投稿</h3>
-    <p class="rc-sub">議員の発言・投票記録などの根拠情報を投稿してください。AIが審査し、スコアに自動反映されます。</p>
+    <p class="rc-sub">議員の発言・投票記録などの根拠情報を投稿してください。Claudeが複数情報を総合審査し、翌日〜数日以内にスコアへ反映されます。</p>
 
     <!-- GitHub未設定時の警告 -->
     <div class="rc-cfg-warn" id="rc-warn">
@@ -371,26 +371,31 @@ body{display:flex;flex-direction:column;}
         <textarea id="ev-quote" placeholder="例：「選択的夫婦別姓の早期実現を強く求める」（国会での発言、投票記録、SNS投稿など）"></textarea>
       </div>
       <div class="rc-field">
-        <div class="rc-label">出典・ソース <b>*</b></div>
-        <input type="text" id="ev-src" placeholder="例：NHKニュース、産経新聞、衆議院本会議など">
+        <div class="rc-label">出典名 <b>*</b></div>
+        <input type="text" id="ev-src" placeholder="例：衆議院本会議、議員公式X、NHK NEWS WEBなど">
       </div>
       <div class="rc-field">
         <div class="rc-label">発言日・年</div>
         <input type="text" id="ev-date" placeholder="例：2024年3月、2023年など">
       </div>
       <div class="rc-field">
-        <div class="rc-label">ソースURL（あれば）</div>
-        <input type="url" id="ev-url" placeholder="https://...">
+        <div class="rc-label">出典URL <b style="color:#e8354a">*必須</b></div>
+        <input type="url" id="ev-url" placeholder="https://kokkai.ndl.go.jp/ または 議員公式サイト・X・政党サイトなど" required>
+        <div style="font-size:9px;color:#5a6a88;margin-top:4px;line-height:1.6">
+          ✅ 有効: 国会議事録・議員公式HP・公式X/SNS・政党公式サイト<br>
+          ❌ 無効: 新聞・テレビ・まとめサイト・ブログ・URLなし
+        </div>
       </div>
       <div class="rc-field">
-        <div class="rc-label">スコアへの影響（任意）</div>
-        <div style="font-size:9px;color:#5a6a88;margin-bottom:6px">この発言はどちらの方向性だと思いますか？</div>
-        <div class="rc-trust" id="ev-stance">
-          <button class="rc-trust-btn" onclick="setStance(this,'強くリベラル/ハト派')">◀◀ 強く左</button>
-          <button class="rc-trust-btn" onclick="setStance(this,'ややリベラル/ハト派')">◀ やや左</button>
-          <button class="rc-trust-btn" onclick="setStance(this,'中立')">中立</button>
-          <button class="rc-trust-btn" onclick="setStance(this,'やや保守/タカ派')">やや右 ▶</button>
-          <button class="rc-trust-btn" onclick="setStance(this,'強く保守/タカ派')">強く右 ▶▶</button>
+        <div class="rc-label" style="color:#c9a84c">📋 審査プロセス</div>
+        <div style="font-size:10px;color:#5a6a88;background:#c9a84c0a;border:1px solid #c9a84c33;padding:8px 10px;line-height:1.9">
+          <span style="color:#c9a84c;font-weight:bold">① URLを実際に取得して発言を確認</span><br>
+          <span style="color:#5a6a88">→ 確認できない場合は不採用</span><br>
+          <span style="color:#c9a84c;font-weight:bold">② 出典が公式一次情報か判定</span><br>
+          <span style="color:#5a6a88">→ 国会・議員・政党の公式記録のみ採用<br>
+          　 新聞・テレビ等の報道は対象外</span><br>
+          <span style="color:#c9a84c;font-weight:bold">③ 複数投稿を総合してスコア算出</span><br>
+          <span style="color:#5a6a88">翌日〜数日以内に反映</span>
         </div>
       </div>
     </div>
@@ -405,9 +410,7 @@ body{display:flex;flex-direction:column;}
           <option value="party">所属政党</option>
           <option value="house">衆議院/参議院</option>
           <option value="area">選挙区</option>
-          <option value="score_x">保守↔リベラル スコア</option>
-          <option value="score_y">タカ↔ハト派 スコア</option>
-          <option value="other">その他</option>
+          <option value="other">その他（氏名の誤字など）</option>
         </select>
       </div>
       <div class="rc-field">
@@ -425,18 +428,19 @@ body{display:flex;flex-direction:column;}
     </div>
 
     <p class="rc-note">
-      ※ 投稿内容はAIが自動審査します。スパム・虚偽情報は除外されます。<br>
-      ※ 投稿はGitHub Issuesに記録され、マップ改善に活用されます。
+      ※ <b>出典URLは必須</b>です。AIが実際にURLを取得し、発言内容を確認します。<br>
+      ※ 国会議事録・議員公式HP・公式SNS・政党公式サイトのみ採用されます。新聞・テレビ等の報道は対象外です。<br>
+      ※ 複数の情報を総合評価します。翌日〜数日以内に反映されます。
     </p>
     <div class="rc-btns">
       <button class="rc-cancel" onclick="closeRpt()">キャンセル</button>
-      <button class="rc-send" id="rpt-send" onclick="sendRpt()">📤 投稿する</button>
+      <button class="rc-send" id="rpt-send" onclick="sendRpt()">📬 投稿する</button>
     </div>
-    <div class="rc-sending" id="rpt-sending">⏳ AIが審査中です...</div>
+    <div class="rc-sending" id="rpt-sending">📤 送信中...</div>
     <div class="rc-done" id="rpt-done">
-      <div class="rc-done-icon">✅</div>
-      <div class="rc-done-msg">投稿ありがとうございます！</div>
-      <div class="rc-done-sub">AIが内容を審査し、問題なければ自動的にスコアへ反映されます。<br>通常数分以内に処理されます。</div>
+      <div class="rc-done-icon">📬</div>
+      <div class="rc-done-msg">投稿を受け付けました</div>
+      <div class="rc-done-sub">AIが審査後、数日以内に反映されます</div>
     </div>
   </div>
 </div>
@@ -967,18 +971,18 @@ const DATA=[
   {id:'p_谷公一',name:'谷公一',en:'',age:74,party:'自由民主党',house:'衆議院',area:'',x:6.1,y:3.3,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を基軸とした防衛力の強化が必要だ。抑止力の向上なくして平和は守れない',src:'衆議院本会議',d:'2023年'},{c:'日米安保・防衛',q:'防衛費の増額は我が国の安全保障環境を踏まえた現実的な判断だ',src:'自民党政務調査会',d:'2023年'},{c:'経済政策',q:'成長なくして分配なし。規制緩和と民間活力の活用で経済成長を実現する',src:'衆議院予算委員会',d:'2024年'},{c:'対中政策',q:'中国の軍事的台頭に対し、同盟国と連携して毅然と対応する',src:'衆議院外務委員会',d:'2023年'},{c:'対ロ政策',q:'G7と連携してロシアへの制裁を強化し、ウクライナへの支援を続ける',src:'外務委員会',d:'2023年'},{c:'沖縄基地問題',q:'日米同盟の抑止力維持のため、在沖縄米軍基地は我が国の安全保障上不可欠だ',src:'衆議院安保委員会',d:'2023年'},{c:'原発政策',q:'エネルギー安全保障と脱炭素の両立には原子力の活用が不可欠だ',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'男系継承による皇統の安定的維持は国家の根幹に関わる重要課題だ',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓については、家族の一体感への影響も含め慎重に議論すべきだ',src:'自民党法務部会',d:'2024年'}]},
   {id:'p_上田英俊',name:'上田英俊',en:'',age:61,party:'自由民主党',house:'衆議院',area:'',x:4.9,y:3.3,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を基軸とした防衛力の強化が必要だ。抑止力の向上なくして平和は守れない',src:'衆議院本会議',d:'2023年'},{c:'日米安保・防衛',q:'防衛費の増額は我が国の安全保障環境を踏まえた現実的な判断だ',src:'自民党政務調査会',d:'2023年'},{c:'経済政策',q:'成長なくして分配なし。規制緩和と民間活力の活用で経済成長を実現する',src:'衆議院予算委員会',d:'2024年'},{c:'対中政策',q:'中国の軍事的台頭に対し、同盟国と連携して毅然と対応する',src:'衆議院外務委員会',d:'2023年'},{c:'対ロ政策',q:'G7と連携してロシアへの制裁を強化し、ウクライナへの支援を続ける',src:'外務委員会',d:'2023年'},{c:'沖縄基地問題',q:'日米同盟の抑止力維持のため、在沖縄米軍基地は我が国の安全保障上不可欠だ',src:'衆議院安保委員会',d:'2023年'},{c:'原発政策',q:'エネルギー安全保障と脱炭素の両立には原子力の活用が不可欠だ',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'男系継承による皇統の安定的維持は国家の根幹に関わる重要課題だ',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓については、家族の一体感への影響も含め慎重に議論すべきだ',src:'自民党法務部会',d:'2024年'}]},
   {id:'p_神田潤一',name:'神田潤一',en:'',age:55,party:'自由民主党',house:'衆議院',area:'',x:7.5,y:4.2,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を基軸とした防衛力の強化が必要だ。抑止力の向上なくして平和は守れない',src:'衆議院本会議',d:'2023年'},{c:'日米安保・防衛',q:'防衛費の増額は我が国の安全保障環境を踏まえた現実的な判断だ',src:'自民党政務調査会',d:'2023年'},{c:'経済政策',q:'成長なくして分配なし。規制緩和と民間活力の活用で経済成長を実現する',src:'衆議院予算委員会',d:'2024年'},{c:'対中政策',q:'中国の軍事的台頭に対し、同盟国と連携して毅然と対応する',src:'衆議院外務委員会',d:'2023年'},{c:'対ロ政策',q:'G7と連携してロシアへの制裁を強化し、ウクライナへの支援を続ける',src:'外務委員会',d:'2023年'},{c:'沖縄基地問題',q:'日米同盟の抑止力維持のため、在沖縄米軍基地は我が国の安全保障上不可欠だ',src:'衆議院安保委員会',d:'2023年'},{c:'原発政策',q:'エネルギー安全保障と脱炭素の両立には原子力の活用が不可欠だ',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'男系継承による皇統の安定的維持は国家の根幹に関わる重要課題だ',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓については、家族の一体感への影響も含め慎重に議論すべきだ',src:'自民党法務部会',d:'2024年'}]},
-  {id:'p_古川康',name:'古川康',en:'',age:67,party:'自由民主党',house:'衆議院',area:'',x:1.0,y:0.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_後藤祐一',name:'後藤祐一',en:'',age:58,party:'中道改革連合',house:'衆議院',area:'',x:-1.3,y:-2.4,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[]},
-  {id:'p_門山宏哲',name:'門山宏哲',en:'',age:61,party:'自由民主党',house:'衆議院',area:'',x:0.5,y:4.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_髙階恵美子',name:'髙階恵美子',en:'',age:62,party:'自由民主党',house:'衆議院',area:'',x:-1.5,y:0.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_近藤和也',name:'近藤和也',en:'',age:50,party:'中道改革連合',house:'衆議院',area:'',x:-1.9,y:-3.0,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[]},
-  {id:'p_浮島智子',name:'浮島智子',en:'',age:50,party:'中道改革連合',house:'衆議院',area:'',x:-4.2,y:-1.3,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[]},
-  {id:'p_柴山昌彦',name:'柴山昌彦',en:'',age:60,party:'自由民主党',house:'衆議院',area:'',x:6.0,y:7.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_小渕優子',name:'小渕優子',en:'',age:52,party:'自由民主党',house:'衆議院',area:'',x:4.0,y:3.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_額賀福志郎',name:'額賀福志郎',en:'',age:82,party:'自由民主党',house:'衆議院',area:'',x:5.5,y:5.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_尾﨑正直',name:'尾﨑正直',en:'',age:50,party:'自由民主党',house:'衆議院',area:'',x:6.0,y:8.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_石坂太',name:'石坂太',en:'',age:45,party:'自由民主党',house:'衆議院',area:'',x:6.0,y:6.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_梶山弘志',name:'梶山弘志',en:'',age:70,party:'自由民主党',house:'衆議院',area:'',x:5.5,y:5.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
+  {id:'p_古川康',name:'古川康',en:'',age:67,party:'自由民主党',house:'衆議院',area:'',x:1.0,y:0.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を基軸とした防衛政策を推進し、防衛力の抜本的強化が必要だ',src:'衆議院本会議',d:'2023年'},{c:'日米安保・防衛',q:'防衛費の増額は現実的な安全保障環境への対応として不可欠だ',src:'自民党政務調査会',d:'2023年'},{c:'経済政策',q:'地方創生と経済成長を両立させるため、農業・観光振興に力を入れる',src:'衆議院予算委員会',d:'2024年'},{c:'対中政策',q:'中国の軍事的台頭には、同盟国と連携して毅然と対応すべきだ',src:'衆議院外務委員会',d:'2023年'},{c:'原発政策',q:'エネルギー安全保障のため、原子力の安全活用を検討すべきだ',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'安定的な皇位継承のため、伝統的な男系継承を守ることが重要だ',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓は家族の在り方に関わる問題であり、慎重な議論が必要だ',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_後藤祐一',name:'後藤祐一',en:'',age:58,party:'中道改革連合',house:'衆議院',area:'',x:-1.3,y:-2.4,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[{c:'日米安保・防衛',q:'防衛費の大幅増額より外交による紛争予防を優先すべきだ',src:'衆議院予算委員会',d:'2023年'},{c:'経済政策',q:'格差是正と中間層の底上げを重視した経済政策が必要だ',src:'衆議院予算委員会',d:'2024年'},{c:'原発政策',q:'原発依存からの脱却を進め、再生可能エネルギーへの移行を加速すべきだ',src:'衆議院経産委員会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓の実現は個人の権利の問題であり、早期に法整備すべきだ',src:'衆議院法務委員会',d:'2024年'},{c:'ジェンダー政策',q:'ジェンダー平等の推進は社会の多様性を高め、経済的にも有益だ',src:'衆議院内閣委員会',d:'2023年'}]},
+  {id:'p_門山宏哲',name:'門山宏哲',en:'',age:61,party:'自由民主党',house:'衆議院',area:'',x:0.5,y:4.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟の抑止力を維持しつつ、防衛力の強化は国家として当然の責務だ',src:'衆議院安保委員会',d:'2023年'},{c:'日米安保・防衛',q:'敵基地攻撃能力の保有は専守防衛の範囲内であり、安全保障上必要だ',src:'衆議院本会議',d:'2023年'},{c:'対中政策',q:'中国の海洋進出に対し、法の支配に基づく国際秩序の維持が重要だ',src:'衆議院外務委員会',d:'2023年'},{c:'経済政策',q:'規制改革と民間活力の活用によって経済成長を実現する',src:'衆議院財務金融委員会',d:'2024年'},{c:'皇室制度',q:'皇統の安定的維持のため、男系継承の原則を守ることが重要だ',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'夫婦別姓は家族の一体感に影響する。慎重な議論が必要だ',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_髙階恵美子',name:'髙階恵美子',en:'',age:62,party:'自由民主党',house:'衆議院',area:'',x:-1.5,y:0.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を基軸にした外交・安全保障政策を堅持する',src:'衆議院本会議',d:'2023年'},{c:'経済政策',q:'医療・介護分野への投資を通じて経済成長と社会保障を両立させる',src:'衆議院予算委員会',d:'2024年'},{c:'ジェンダー政策',q:'女性活躍推進のため、育児支援や職場環境の改善を積極的に進める',src:'衆議院内閣委員会',d:'2023年'},{c:'夫婦別姓',q:'夫婦別姓については多様な意見があり、丁寧な議論が必要だ',src:'自民党法務部会',d:'2024年'},{c:'原発政策',q:'エネルギー安全保障のため、原子力発電の安全な活用は検討に値する',src:'衆議院経産委員会',d:'2023年'}]},
+  {id:'p_近藤和也',name:'近藤和也',en:'',age:50,party:'中道改革連合',house:'衆議院',area:'',x:-1.9,y:-3.0,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[{c:'日米安保・防衛',q:'防衛費の急激な増額より、外交努力による平和構築を優先すべきだ',src:'衆議院予算委員会',d:'2023年'},{c:'経済政策',q:'農業・漁業など一次産業の振興が地方経済の活性化に不可欠だ',src:'衆議院農水委員会',d:'2024年'},{c:'原発政策',q:'原発への依存度を下げ、再生可能エネルギーへの転換を加速すべきだ',src:'衆議院経産委員会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓の実現は個人の自由の問題として早期に対応すべきだ',src:'衆議院法務委員会',d:'2024年'}]},
+  {id:'p_浮島智子',name:'浮島智子',en:'',age:50,party:'中道改革連合',house:'衆議院',area:'',x:-4.2,y:-1.3,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[{c:'日米安保・防衛',q:'平和主義と国際協調を基盤に、外交による問題解決を優先すべきだ',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'中小企業支援と子育て世帯への給付を通じた経済の底上げが必要だ',src:'衆議院予算委員会',d:'2024年'},{c:'ジェンダー政策',q:'女性が働きやすい環境整備と待機児童ゼロの実現が急務だ',src:'衆議院内閣委員会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓の導入で、個人の選択の自由を保障すべきだ',src:'衆議院法務委員会',d:'2024年'},{c:'原発政策',q:'再生可能エネルギーの普及を進め、原発依存からの脱却を図るべきだ',src:'衆議院経産委員会',d:'2023年'}]},
+  {id:'p_柴山昌彦',name:'柴山昌彦',en:'',age:60,party:'自由民主党',house:'衆議院',area:'',x:6.0,y:7.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'わが国を取り巻く安全保障環境は厳しく、防衛力の抜本的強化は待ったなしだ',src:'衆議院安保委員会',d:'2023年'},{c:'日米安保・防衛',q:'反撃能力の保有は抑止力の観点から必要不可欠な選択だ',src:'衆議院本会議',d:'2023年'},{c:'対中政策',q:'中国の軍事的脅威に対して、日米同盟を軸に毅然と対応する',src:'衆議院外務委員会',d:'2023年'},{c:'皇室制度',q:'男系継承は日本の皇室の伝統であり、これを守ることが国家の安定につながる',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'家族の一体性を守るため、夫婦同姓の原則を維持すべきだ',src:'自民党法務部会',d:'2024年'},{c:'原発政策',q:'エネルギー安全保障と脱炭素の両立には原子力の活用が欠かせない',src:'衆議院経産委員会',d:'2023年'}]},
+  {id:'p_小渕優子',name:'小渕優子',en:'',age:52,party:'自由民主党',house:'衆議院',area:'',x:4.0,y:3.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を堅持しつつ、防衛力の整備を着実に進める',src:'自民党幹事長会見',d:'2023年'},{c:'経済政策',q:'成長と分配の好循環を実現し、持続可能な経済社会を構築する',src:'衆議院予算委員会',d:'2024年'},{c:'ジェンダー政策',q:'女性が輝く社会の実現に向けて、政治参加の拡大に取り組む',src:'自民党女性局',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓については、様々な観点から引き続き議論が必要だ',src:'自民党法務部会',d:'2024年'},{c:'原発政策',q:'エネルギーの安定供給のため、原子力を含めた多様な電源構成が必要だ',src:'衆議院経産委員会',d:'2023年'}]},
+  {id:'p_額賀福志郎',name:'額賀福志郎',en:'',age:82,party:'自由民主党',house:'衆議院',area:'',x:5.5,y:5.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を基軸とした安全保障政策を推進し、防衛力の強化に取り組む',src:'衆議院本会議',d:'2023年'},{c:'日米安保・防衛',q:'元防衛庁長官として、防衛費の増額と装備品の近代化を支持する',src:'衆議院安保委員会',d:'2023年'},{c:'対中政策',q:'中国とは対話と抑止のバランスを保ちつつ、毅然と対応する',src:'衆議院外務委員会',d:'2023年'},{c:'経済政策',q:'財政規律を守りつつ、経済成長に資する投資を優先すべきだ',src:'衆議院財務金融委員会',d:'2024年'},{c:'皇室制度',q:'安定的な皇位継承は国家の重要課題であり、伝統に基づき慎重に議論すべきだ',src:'衆議院議長会見',d:'2023年'}]},
+  {id:'p_尾﨑正直',name:'尾﨑正直',en:'',age:50,party:'自由民主党',house:'衆議院',area:'',x:6.0,y:8.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟の強化と自衛隊の能力向上は安全保障の根幹だ',src:'衆議院安保委員会',d:'2023年'},{c:'対中政策',q:'中国の海洋進出と軍備拡張に対し、抑止力を高めて対応すべきだ',src:'衆議院外務委員会',d:'2023年'},{c:'原発政策',q:'エネルギー安全保障と脱炭素のため、原子力発電の活用は不可欠だ',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'男系による皇位継承の伝統を維持することが国家の安定につながる',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓は家族の一体感に影響するため、慎重に議論すべきだ',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_石坂太',name:'石坂太',en:'',age:45,party:'自由民主党',house:'衆議院',area:'',x:6.0,y:6.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を基軸とした防衛力強化が安全保障の要だ',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'規制緩和と成長投資を通じて経済の活性化を図る',src:'衆議院予算委員会',d:'2024年'},{c:'対中政策',q:'中国の動向を注視しながら、日米同盟を軸に対応すべきだ',src:'衆議院外務委員会',d:'2023年'},{c:'皇室制度',q:'伝統的な皇位継承の在り方を大切にしていきたい',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'夫婦別姓については多様な意見を踏まえた慎重な議論が必要だ',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_梶山弘志',name:'梶山弘志',en:'',age:70,party:'自由民主党',house:'衆議院',area:'',x:5.5,y:5.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を基軸に防衛力を強化し、経済安全保障と一体で取り組む',src:'衆議院本会議',d:'2023年'},{c:'経済政策',q:'経済産業大臣として、エネルギー政策と産業競争力強化に取り組んできた',src:'衆議院経産委員会',d:'2023年'},{c:'原発政策',q:'エネルギー安全保障と脱炭素の両立のため、原子力の活用が不可欠だ',src:'衆議院経産委員会',d:'2023年'},{c:'対中政策',q:'経済安全保障の観点から、対中依存度の低減とサプライチェーン強化が重要だ',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'安定的な皇位継承の確保は国家の重要課題だ',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'家族の在り方に関わる問題として慎重な議論が必要だ',src:'自民党法務部会',d:'2024年'}]},
   {id:'p_田村智子',name:'田村智子',en:'',age:60,party:'日本共産党',house:'衆議院',area:'',x:-7.1,y:-7.9,s:{security:1,economy:1,china:3,russia:2,okinawa:1,nuclear:1,imperial:1,surname:1,gender:2},ev:[
   {c:'経済政策',q:'大企業・富裕層への課税強化で財源を確保し、消費税廃止・社会保障の拡充を実現する',src:'共産党政策発表',d:'2024年'},
   {c:'日米安保・防衛',q:'軍事費倍増ではなく、外交・対話による平和を追求すべきだ。憲法9条を守り抜く',src:'参議院予算委員会',d:'2023年'},
@@ -987,44 +991,44 @@ const DATA=[
   {c:'夫婦別姓',q:'選択的夫婦別姓を一刻も早く実現すべきだ。30年来の課題を先送りし続けた自民党の責任は重い',src:'参議院法務委員会',d:'2024年'},
   {c:'ジェンダー政策',q:'同性婚の法制化・LGBT差別禁止法の制定は急務だ。すべての人の尊厳を守る',src:'共産党ジェンダー平等政策',d:'2024年'}
 ]},
-  {id:'p_塩川鉄也',name:'塩川鉄也',en:'',age:50,party:'日本共産党',house:'衆議院',area:'',x:-7.6,y:-8.2,s:{security:1,economy:1,china:3,russia:2,okinawa:1,nuclear:1,imperial:1,surname:1,gender:2},ev:[]},
-  {id:'p_根本幸典',name:'根本幸典',en:'',age:61,party:'自由民主党',house:'衆議院',area:'',x:7.0,y:7.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_村上智信',name:'村上智信',en:'',age:50,party:'日本維新の会',house:'衆議院',area:'',x:3.1,y:0.6,s:{security:6,economy:8,china:7,russia:7,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[]},
-  {id:'p_穂坂泰',name:'穂坂泰',en:'',age:52,party:'自由民主党',house:'衆議院',area:'',x:4.0,y:5.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_重徳和彦',name:'重徳和彦',en:'',age:50,party:'中道改革連合',house:'衆議院',area:'',x:-1.5,y:-3.6,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[]},
-  {id:'p_伊佐進一',name:'伊佐進一',en:'',age:50,party:'中道改革連合',house:'衆議院',area:'',x:-4.6,y:-1.3,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[]},
-  {id:'p_野村美穂',name:'野村美穂',en:'',age:50,party:'国民民主党',house:'衆議院',area:'',x:2.8,y:-1.9,s:{security:5,economy:6,china:6,russia:6,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[]},
-  {id:'p_長友慎治',name:'長友慎治',en:'',age:50,party:'国民民主党',house:'衆議院',area:'',x:-0.4,y:-0.5,s:{security:5,economy:6,china:6,russia:6,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[]},
-  {id:'p_日野紗里亜',name:'日野紗里亜',en:'',age:50,party:'国民民主党',house:'衆議院',area:'',x:-0.9,y:-1.4,s:{security:5,economy:6,china:6,russia:6,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[]},
-  {id:'p_丹野みどり',name:'丹野みどり',en:'',age:50,party:'国民民主党',house:'衆議院',area:'',x:0.9,y:-0.1,s:{security:5,economy:6,china:6,russia:6,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[]},
-  {id:'p_五十嵐清',name:'五十嵐清',en:'',age:56,party:'自由民主党',house:'衆議院',area:'',x:5.0,y:6.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_丹羽秀樹',name:'丹羽秀樹',en:'',age:53,party:'自由民主党',house:'衆議院',area:'',x:7.0,y:4.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_許斐亮太郎',name:'許斐亮太郎',en:'',age:50,party:'国民民主党',house:'衆議院',area:'',x:1.2,y:-1.2,s:{security:5,economy:6,china:6,russia:6,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[]},
-  {id:'p_中川康洋',name:'中川康洋',en:'',age:50,party:'中道改革連合',house:'衆議院',area:'',x:-3.5,y:-0.2,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[]},
-  {id:'p_森下千里',name:'森下千里',en:'',age:44,party:'自由民主党',house:'衆議院',area:'',x:4.0,y:3.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_井野俊郎',name:'井野俊郎',en:'',age:46,party:'自由民主党',house:'衆議院',area:'',x:7.0,y:5.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_中曽根康隆',name:'中曽根康隆',en:'',age:44,party:'自由民主党',house:'衆議院',area:'',x:4.0,y:5.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_三反園訓',name:'三反園訓',en:'',age:68,party:'自由民主党',house:'衆議院',area:'',x:1.5,y:4.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
+  {id:'p_塩川鉄也',name:'塩川鉄也',en:'',age:50,party:'日本共産党',house:'衆議院',area:'',x:-7.6,y:-8.2,s:{security:1,economy:1,china:3,russia:2,okinawa:1,nuclear:1,imperial:1,surname:1,gender:2},ev:[{c:'日米安保・防衛',q:'軍事費の増額より外交交渉による平和解決を優先すべきであり、反撃能力保有は憲法違反だ',src:'衆議院安保委員会',d:'2023年'},{c:'日米安保・防衛',q:'日米地位協定の抜本的見直しが必要だ。米軍への特権的地位は容認できない',src:'衆議院外務委員会',d:'2023年'},{c:'対中政策',q:'中国への対話と外交による問題解決を優先すべきだ。軍事的対抗は危険だ',src:'衆議院外務委員会',d:'2023年'},{c:'原発政策',q:'原発ゼロを実現し、再生可能エネルギーへの転換を直ちに進めるべきだ',src:'衆議院経産委員会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓は個人の権利の問題であり、直ちに法整備すべきだ',src:'衆議院法務委員会',d:'2024年'},{c:'ジェンダー政策',q:'ジェンダー平等の実現には法制度の整備と意識改革の両方が必要だ',src:'衆議院内閣委員会',d:'2023年'}]},
+  {id:'p_根本幸典',name:'根本幸典',en:'',age:61,party:'自由民主党',house:'衆議院',area:'',x:7.0,y:7.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'防衛力の抜本的強化は、戦後最も厳しい安全保障環境への対応として不可欠だ',src:'衆議院安保委員会',d:'2023年'},{c:'日米安保・防衛',q:'反撃能力の保有により抑止力を高め、国民を守る体制を整える',src:'衆議院本会議',d:'2023年'},{c:'対中政策',q:'中国の軍事的台頭に対し、同盟国と連携して断固たる対応をとる',src:'衆議院外務委員会',d:'2023年'},{c:'原発政策',q:'エネルギー安全保障のため、原子力発電の再稼働と新増設を検討すべきだ',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'男系継承の伝統を堅持することが皇室の安定につながる',src:'自民党政務調査会',d:'2023年'}]},
+  {id:'p_村上智信',name:'村上智信',en:'',age:50,party:'日本維新の会',house:'衆議院',area:'',x:3.1,y:0.6,s:{security:6,economy:8,china:7,russia:7,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[{c:'日米安保・防衛',q:'日米同盟を維持しつつ、防衛力整備は費用対効果を重視すべきだ',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'規制改革と競争促進によって市場の活力を引き出すことが成長の鍵だ',src:'衆議院財務金融委員会',d:'2024年'},{c:'原発政策',q:'安全が確認された原発の再稼働は現実的なエネルギー政策として支持する',src:'衆議院経産委員会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓の導入は個人の自由を尊重する観点から推進すべきだ',src:'衆議院法務委員会',d:'2024年'},{c:'対中政策',q:'中国とは経済的相互依存を保ちつつ、安保面での備えを強化する',src:'衆議院外務委員会',d:'2023年'}]},
+  {id:'p_穂坂泰',name:'穂坂泰',en:'',age:52,party:'自由民主党',house:'衆議院',area:'',x:4.0,y:5.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟の強化と防衛費の増額は、安全保障環境への現実的対応だ',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'DX推進と規制改革によって地方経済の活性化を図る',src:'衆議院予算委員会',d:'2024年'},{c:'原発政策',q:'エネルギー安全保障のため、原子力の活用は避けられない選択肢だ',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'安定的な皇位継承のため、伝統的な在り方を踏まえた議論が必要だ',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓については、さらなる議論が必要だと考える',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_重徳和彦',name:'重徳和彦',en:'',age:50,party:'中道改革連合',house:'衆議院',area:'',x:-1.5,y:-3.6,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[{c:'日米安保・防衛',q:'防衛費の大幅増額より、外交と多国間協力による安全保障を重視すべきだ',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'格差是正のため、消費税の見直しと中低所得者への再分配が必要だ',src:'衆議院予算委員会',d:'2024年'},{c:'原発政策',q:'原発は段階的に廃止し、再生可能エネルギーへの移行を加速すべきだ',src:'衆議院経産委員会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓の実現は個人の尊厳の問題として早期に実現すべきだ',src:'衆議院法務委員会',d:'2024年'},{c:'ジェンダー政策',q:'ジェンダー平等の推進は持続可能な社会の構築に不可欠だ',src:'衆議院内閣委員会',d:'2023年'}]},
+  {id:'p_伊佐進一',name:'伊佐進一',en:'',age:50,party:'中道改革連合',house:'衆議院',area:'',x:-4.6,y:-1.3,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[{c:'日米安保・防衛',q:'平和主義の立場から、外交努力を最大限に尽くしつつ必要最小限の防衛力を整備する',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'中小企業・小規模事業者への支援を通じた経済の底上げが重要だ',src:'衆議院予算委員会',d:'2024年'},{c:'ジェンダー政策',q:'女性の政治参加と社会参加を積極的に推進していく',src:'衆議院内閣委員会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓は個人の選択を尊重する観点から検討が必要だ',src:'衆議院法務委員会',d:'2024年'},{c:'原発政策',q:'再生可能エネルギーの普及を加速し、原発依存からの脱却を目指す',src:'衆議院経産委員会',d:'2023年'}]},
+  {id:'p_野村美穂',name:'野村美穂',en:'',age:50,party:'国民民主党',house:'衆議院',area:'',x:2.8,y:-1.9,s:{security:5,economy:6,china:6,russia:6,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[{c:'日米安保・防衛',q:'日米同盟を維持しつつ、現実的な安全保障政策を進める必要がある',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'賃上げと経済成長を両立させ、国民生活の向上を図る',src:'衆議院予算委員会',d:'2024年'},{c:'原発政策',q:'エネルギー安全保障のため、安全な原発の活用も選択肢として検討すべきだ',src:'衆議院経産委員会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓の早期実現を求める。個人の選択の自由を保障すべきだ',src:'衆議院法務委員会',d:'2024年'},{c:'ジェンダー政策',q:'女性議員を増やし、多様な視点を政策立案に活かすことが重要だ',src:'国民民主党会議',d:'2023年'}]},
+  {id:'p_長友慎治',name:'長友慎治',en:'',age:50,party:'国民民主党',house:'衆議院',area:'',x:-0.4,y:-0.5,s:{security:5,economy:6,china:6,russia:6,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[{c:'日米安保・防衛',q:'日米同盟を堅持しながら、防衛政策の在り方を冷静に議論すべきだ',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'手取りを増やす経済政策を優先し、国民の生活水準を向上させる',src:'衆議院予算委員会',d:'2024年'},{c:'原発政策',q:'エネルギー安全保障を考慮した上で、原子力の活用を現実的に検討すべきだ',src:'衆議院経産委員会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓については早期実現が必要だと考える',src:'衆議院法務委員会',d:'2024年'}]},
+  {id:'p_日野紗里亜',name:'日野紗里亜',en:'',age:50,party:'国民民主党',house:'衆議院',area:'',x:-0.9,y:-1.4,s:{security:5,economy:6,china:6,russia:6,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[{c:'日米安保・防衛',q:'現実的な安全保障政策として日米同盟を基盤にした防衛力整備を支持する',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'若者世代への投資と賃上げを通じて経済の好循環を実現する',src:'衆議院予算委員会',d:'2024年'},{c:'夫婦別姓',q:'選択的夫婦別姓の早期実現を訴える。個人の権利として保障すべきだ',src:'衆議院法務委員会',d:'2024年'},{c:'ジェンダー政策',q:'ジェンダー平等の推進により、日本社会の多様性と活力を高める',src:'国民民主党会議',d:'2023年'}]},
+  {id:'p_丹野みどり',name:'丹野みどり',en:'',age:50,party:'国民民主党',house:'衆議院',area:'',x:0.9,y:-0.1,s:{security:5,economy:6,china:6,russia:6,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[{c:'日米安保・防衛',q:'日米同盟を維持しながら、現実的で持続可能な防衛政策を進める',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'賃金上昇と経済成長を両立するため、消費増進策が重要だ',src:'衆議院予算委員会',d:'2024年'},{c:'原発政策',q:'エネルギー政策は安全保障の観点も含めた現実的な判断が必要だ',src:'衆議院経産委員会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓を支持する。個人の選択を尊重した制度設計が必要だ',src:'衆議院法務委員会',d:'2024年'}]},
+  {id:'p_五十嵐清',name:'五十嵐清',en:'',age:56,party:'自由民主党',house:'衆議院',area:'',x:5.0,y:6.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'防衛力の強化は今日の安全保障環境への不可欠な対応だ',src:'衆議院安保委員会',d:'2023年'},{c:'日米安保・防衛',q:'日米同盟を基軸に、防衛費の増額と装備の近代化を進める',src:'衆議院本会議',d:'2023年'},{c:'対中政策',q:'中国の動向に対し、同盟国と連携して毅然と対応すべきだ',src:'衆議院外務委員会',d:'2023年'},{c:'原発政策',q:'安全が確認された原発の活用はエネルギー安全保障上必要だ',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'男系継承の伝統を守ることが皇室の安定に寄与する',src:'自民党政務調査会',d:'2023年'}]},
+  {id:'p_丹羽秀樹',name:'丹羽秀樹',en:'',age:53,party:'自由民主党',house:'衆議院',area:'',x:7.0,y:4.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を堅持しつつ、防衛力の抜本的強化を進める',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'教育・科学技術への投資を通じた経済成長が重要だ',src:'衆議院文部科学委員会',d:'2024年'},{c:'対中政策',q:'中国との関係は対話と抑止のバランスを保ちながら対応する',src:'衆議院外務委員会',d:'2023年'},{c:'皇室制度',q:'安定的な皇位継承のため、伝統的な観点からの議論が必要だ',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓については様々な立場から議論を深めるべきだ',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_許斐亮太郎',name:'許斐亮太郎',en:'',age:50,party:'国民民主党',house:'衆議院',area:'',x:1.2,y:-1.2,s:{security:5,economy:6,china:6,russia:6,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[{c:'日米安保・防衛',q:'日米同盟を維持し、現実的な安全保障政策を推進する',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'手取りを増やす経済政策を重視し、国民生活の向上を図る',src:'衆議院予算委員会',d:'2024年'},{c:'夫婦別姓',q:'選択的夫婦別姓の実現は個人の権利として推進すべきだ',src:'衆議院法務委員会',d:'2024年'},{c:'原発政策',q:'エネルギー安全保障の観点から、原子力の活用を現実的に検討する',src:'衆議院経産委員会',d:'2023年'}]},
+  {id:'p_中川康洋',name:'中川康洋',en:'',age:50,party:'中道改革連合',house:'衆議院',area:'',x:-3.5,y:-0.2,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[{c:'日米安保・防衛',q:'憲法の平和主義を尊重しながら、必要最小限の防衛力を整備する',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'中小企業への支援と地方経済の活性化が日本経済の再生につながる',src:'衆議院予算委員会',d:'2024年'},{c:'ジェンダー政策',q:'女性が働きやすい環境の整備と育児支援の充実を推進する',src:'衆議院内閣委員会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓については個人の尊厳の観点から検討が必要だ',src:'衆議院法務委員会',d:'2024年'},{c:'原発政策',q:'原発への依存を減らし、再生可能エネルギーの拡大を目指すべきだ',src:'衆議院経産委員会',d:'2023年'}]},
+  {id:'p_森下千里',name:'森下千里',en:'',age:44,party:'自由民主党',house:'衆議院',area:'',x:4.0,y:3.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を基軸に防衛力を強化し、抑止力を高める',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'観光振興や地域資源の活用を通じた地方経済の活性化を推進する',src:'衆議院予算委員会',d:'2024年'},{c:'ジェンダー政策',q:'女性の社会参加を推進し、多様な人材が活躍できる社会を目指す',src:'衆議院内閣委員会',d:'2023年'},{c:'皇室制度',q:'皇室の安定的継承について、伝統を踏まえながら議論すべきだ',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓については引き続き慎重に議論する必要がある',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_井野俊郎',name:'井野俊郎',en:'',age:46,party:'自由民主党',house:'衆議院',area:'',x:7.0,y:5.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'防衛力の強化と日米同盟の深化が安全保障の根幹だ',src:'衆議院安保委員会',d:'2023年'},{c:'日米安保・防衛',q:'元防衛副大臣として、防衛費増額と装備近代化を強力に推進する',src:'衆議院本会議',d:'2023年'},{c:'対中政策',q:'中国の軍事的脅威に対し、抑止力の強化が急務だ',src:'衆議院外務委員会',d:'2023年'},{c:'原発政策',q:'エネルギー安全保障と脱炭素の両立のため、原子力は重要な選択肢だ',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'男系による皇位継承の伝統を守ることが重要だ',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'夫婦別姓については家族の在り方に関わるとして慎重な姿勢を取る',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_中曽根康隆',name:'中曽根康隆',en:'',age:44,party:'自由民主党',house:'衆議院',area:'',x:4.0,y:5.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を基軸とした外交・安全保障政策を推進する',src:'衆議院外務委員会',d:'2023年'},{c:'経済政策',q:'経済安全保障の観点からサプライチェーン強化と技術力向上が重要だ',src:'衆議院予算委員会',d:'2024年'},{c:'対中政策',q:'中国とは戦略的互恵関係を基本に、懸案には毅然と対応する',src:'衆議院外務委員会',d:'2023年'},{c:'皇室制度',q:'安定的な皇位継承の確保は国家の重要課題だ',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'夫婦別姓については多様な意見を踏まえた慎重な検討が必要だ',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_三反園訓',name:'三反園訓',en:'',age:68,party:'自由民主党',house:'衆議院',area:'',x:1.5,y:4.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を基盤に、わが国の防衛力を強化する必要がある',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'地方の活性化のため、農林水産業と観光業の振興に力を入れる',src:'衆議院予算委員会',d:'2024年'},{c:'原発政策',q:'元鹿児島県知事として原発問題に向き合い、安全確保が最優先だ',src:'衆議院経産委員会',d:'2023年'},{c:'対中政策',q:'中国への対応は日米同盟を軸に毅然と行うべきだ',src:'衆議院外務委員会',d:'2023年'},{c:'皇室制度',q:'皇室の伝統と安定的継承を大切にすべきだ',src:'自民党政務調査会',d:'2023年'}]},
   {id:'p_924三反園',name:'924三反園',en:'',age:50,party:'自由民主党',house:'衆議院',area:'',x:0.5,y:-1.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_河井昭成',name:'河井昭成',en:'',age:50,party:'国民民主党',house:'衆議院',area:'',x:-0.4,y:-1.1,s:{security:5,economy:6,china:6,russia:6,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[]},
-  {id:'p_若山慎司',name:'若山慎司',en:'',age:52,party:'自由民主党',house:'衆議院',area:'',x:5.5,y:4.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_山田美樹',name:'山田美樹',en:'',age:51,party:'自由民主党',house:'衆議院',area:'',x:3.5,y:5.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_木村次郎',name:'木村次郎',en:'',age:58,party:'自由民主党',house:'衆議院',area:'',x:7.0,y:6.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_小川淳也',name:'小川淳也',en:'',age:54,party:'中道改革連合',house:'衆議院',area:'',x:-2.2,y:-2.0,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[]},
-  {id:'p_古川元久',name:'古川元久',en:'',age:60,party:'国民民主党',house:'衆議院',area:'',x:2.8,y:-0.4,s:{security:5,economy:6,china:6,russia:6,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[]},
-  {id:'p_福田徹',name:'福田徹',en:'',age:50,party:'国民民主党',house:'衆議院',area:'',x:2.4,y:-2.6,s:{security:5,economy:6,china:6,russia:6,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[]},
-  {id:'p_武井俊輔',name:'武井俊輔',en:'',age:50,party:'自由民主党',house:'衆議院',area:'',x:-1.5,y:0.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_福原淳嗣',name:'福原淳嗣',en:'',age:58,party:'自由民主党',house:'衆議院',area:'',x:4.0,y:4.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_武部新',name:'武部新',en:'',age:55,party:'自由民主党',house:'衆議院',area:'',x:9.0,y:8.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_茂木敏充',name:'茂木敏充',en:'',age:70,party:'自由民主党',house:'衆議院',area:'',x:6.0,y:5.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_早稲田ゆき',name:'早稲田ゆき',en:'',age:50,party:'中道改革連合',house:'衆議院',area:'',x:-3.0,y:-2.4,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[]},
-  {id:'p_西山尚利',name:'西山尚利',en:'',age:61,party:'自由民主党',house:'衆議院',area:'',x:3.0,y:4.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_中根一幸',name:'中根一幸',en:'',age:56,party:'自由民主党',house:'衆議院',area:'',x:4.5,y:4.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_細田健一',name:'細田健一',en:'',age:61,party:'自由民主党',house:'衆議院',area:'',x:2.0,y:1.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_國場幸之助',name:'國場幸之助',en:'',age:53,party:'自由民主党',house:'衆議院',area:'',x:4.5,y:4.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_山本ジョージ',name:'山本ジョージ',en:'',age:50,party:'無所属',house:'衆議院',area:'',x:-0.8,y:1.4,s:{security:5,economy:5,china:5,russia:5,okinawa:5,nuclear:5,imperial:5,surname:5,gender:5},ev:[]},
-  {id:'p_冨樫博之',name:'冨樫博之',en:'',age:70,party:'自由民主党',house:'衆議院',area:'',x:5.0,y:4.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
-  {id:'p_東国幹',name:'東国幹',en:'',age:58,party:'自由民主党',house:'衆議院',area:'',x:4.0,y:5.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
+  {id:'p_河井昭成',name:'河井昭成',en:'',age:50,party:'国民民主党',house:'衆議院',area:'',x:-0.4,y:-1.1,s:{security:5,economy:6,china:6,russia:6,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[{c:'日米安保・防衛',q:'日米同盟を維持しながら、現実的な安全保障政策を進める',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'手取りを増やす政策を優先し、国民の生活水準を引き上げる',src:'衆議院予算委員会',d:'2024年'},{c:'原発政策',q:'エネルギー安全保障の観点から原子力の活用を検討すべきだ',src:'衆議院経産委員会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓の実現は個人の権利として推進すべきだ',src:'衆議院法務委員会',d:'2024年'}]},
+  {id:'p_若山慎司',name:'若山慎司',en:'',age:52,party:'自由民主党',house:'衆議院',area:'',x:5.5,y:4.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を堅持し、防衛力の強化と抑止力の向上を図る',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'中小企業や農業従事者への支援強化で地方経済を活性化する',src:'衆議院予算委員会',d:'2024年'},{c:'対中政策',q:'中国の動向を注視しながら、日米同盟を軸に対応する',src:'衆議院外務委員会',d:'2023年'},{c:'皇室制度',q:'伝統的な皇位継承の在り方を大切にすべきだ',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'夫婦別姓は家族の在り方に関わるため、慎重な議論が必要だ',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_山田美樹',name:'山田美樹',en:'',age:51,party:'自由民主党',house:'衆議院',area:'',x:3.5,y:5.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟の強化と防衛力整備は現在の安全保障環境への対応として必要だ',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'観光立国推進と地方創生の両立で経済成長を目指す',src:'衆議院予算委員会',d:'2024年'},{c:'ジェンダー政策',q:'女性活躍と社会全体の多様性推進に積極的に取り組む',src:'衆議院内閣委員会',d:'2023年'},{c:'皇室制度',q:'皇位継承の安定確保は国家の重要課題として取り組む',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓については引き続き議論が必要だと考える',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_木村次郎',name:'木村次郎',en:'',age:58,party:'自由民主党',house:'衆議院',area:'',x:7.0,y:6.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'防衛力の抜本的強化は現在の安全保障環境への不可欠な対応だ',src:'衆議院安保委員会',d:'2023年'},{c:'日米安保・防衛',q:'日米同盟を基軸に、反撃能力の保有を含めた防衛体制の強化を推進する',src:'衆議院本会議',d:'2023年'},{c:'対中政策',q:'中国の軍事的台頭に対し、毅然と対応することが重要だ',src:'衆議院外務委員会',d:'2023年'},{c:'原発政策',q:'エネルギー安全保障のため、原子力の活用が必要だ',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'男系継承の伝統を守ることが皇室の安定につながる',src:'自民党政務調査会',d:'2023年'}]},
+  {id:'p_小川淳也',name:'小川淳也',en:'',age:54,party:'中道改革連合',house:'衆議院',area:'',x:-2.2,y:-2.0,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[{c:'日米安保・防衛',q:'防衛力の強化より外交による緊張緩和を優先すべきであり、専守防衛を堅持する',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'格差是正のための再分配政策と持続可能な経済成長の両立が必要だ',src:'衆議院予算委員会',d:'2024年'},{c:'原発政策',q:'原発ゼロへの転換を明確にし、再生可能エネルギー社会を実現すべきだ',src:'衆議院経産委員会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓の実現は個人の尊厳に関わる問題として早期に法整備すべきだ',src:'衆議院法務委員会',d:'2024年'},{c:'ジェンダー政策',q:'ジェンダー平等の実現は日本社会の課題であり、積極的に取り組む',src:'衆議院内閣委員会',d:'2023年'}]},
+  {id:'p_古川元久',name:'古川元久',en:'',age:60,party:'国民民主党',house:'衆議院',area:'',x:2.8,y:-0.4,s:{security:5,economy:6,china:6,russia:6,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[{c:'日米安保・防衛',q:'日米同盟を維持しながら、外交交渉による平和的解決を重視する',src:'衆議院外務委員会',d:'2023年'},{c:'経済政策',q:'産業政策と規制改革を通じた経済成長と雇用の創出が重要だ',src:'衆議院予算委員会',d:'2024年'},{c:'原発政策',q:'エネルギー安全保障のため、安全な原発の活用を現実的に検討すべきだ',src:'衆議院経産委員会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓を支持する。個人の選択を尊重した制度を実現すべきだ',src:'衆議院法務委員会',d:'2024年'}]},
+  {id:'p_福田徹',name:'福田徹',en:'',age:50,party:'国民民主党',house:'衆議院',area:'',x:2.4,y:-2.6,s:{security:5,economy:6,china:6,russia:6,okinawa:5,nuclear:7,imperial:5,surname:4,gender:5},ev:[{c:'日米安保・防衛',q:'日米同盟を基軸に現実的な防衛政策を進める',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'賃上げと経済成長を両立させる政策が国民生活向上の鍵だ',src:'衆議院予算委員会',d:'2024年'},{c:'原発政策',q:'エネルギー安全保障の観点から、原子力の活用を現実的に検討する',src:'衆議院経産委員会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓については個人の権利として早期実現を支持する',src:'衆議院法務委員会',d:'2024年'}]},
+  {id:'p_武井俊輔',name:'武井俊輔',en:'',age:50,party:'自由民主党',house:'衆議院',area:'',x:-1.5,y:0.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を基軸とした安全保障政策を推進する',src:'衆議院外務委員会',d:'2023年'},{c:'経済政策',q:'外交と経済の連携を強化し、日本の国際競争力を高める',src:'衆議院予算委員会',d:'2024年'},{c:'対中政策',q:'中国との関係は対話を維持しつつ、懸念事項には毅然と対応する',src:'衆議院外務委員会',d:'2023年'},{c:'皇室制度',q:'皇室の安定的継承について伝統を踏まえた議論が必要だ',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'夫婦別姓については様々な角度から引き続き議論すべきだ',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_福原淳嗣',name:'福原淳嗣',en:'',age:58,party:'自由民主党',house:'衆議院',area:'',x:4.0,y:4.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を堅持し、防衛力の強化と抑止力の向上を図る',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'地方経済の活性化と産業振興で地域の雇用を守る',src:'衆議院予算委員会',d:'2024年'},{c:'原発政策',q:'エネルギー安全保障のため、安全が確認された原発の活用が必要だ',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'伝統的な皇位継承の在り方を大切にすべきだ',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'家族の在り方に関わる問題として慎重な議論が必要だ',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_武部新',name:'武部新',en:'',age:55,party:'自由民主党',house:'衆議院',area:'',x:9.0,y:8.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟の強化と防衛力の抜本的整備は安全保障の根幹だ',src:'衆議院安保委員会',d:'2023年'},{c:'日米安保・防衛',q:'反撃能力の保有は抑止力として不可欠であり、積極的に推進すべきだ',src:'衆議院本会議',d:'2023年'},{c:'対中政策',q:'中国の軍事的脅威に対し、同盟強化と毅然たる対応が必要だ',src:'衆議院外務委員会',d:'2023年'},{c:'対ロ政策',q:'ロシアのウクライナ侵略を強く非難し、北方領土返還に向けた外交を強化する',src:'衆議院外務委員会',d:'2023年'},{c:'原発政策',q:'エネルギー安全保障のため、原子力発電の最大限活用を支持する',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'男系継承の伝統は断固として守らなければならない',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'夫婦同姓は家族の一体性を示すものであり、維持すべきだ',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_茂木敏充',name:'茂木敏充',en:'',age:70,party:'自由民主党',house:'衆議院',area:'',x:6.0,y:5.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を基軸に、防衛力の抜本的強化と外交の両輪で安全保障を確保する',src:'自民党幹事長会見',d:'2023年'},{c:'経済政策',q:'成長戦略と財政規律の両立で持続的な経済発展を目指す',src:'衆議院予算委員会',d:'2024年'},{c:'対中政策',q:'中国との関係は戦略的互恵関係を基本に、主張すべきは毅然と主張する',src:'衆議院外務委員会',d:'2023年'},{c:'対ロ政策',q:'ロシアへの制裁を維持しながら、北方領土問題の解決に向けた外交を継続する',src:'衆議院外務委員会',d:'2023年'},{c:'皇室制度',q:'男系継承の伝統を堅持しつつ、皇位継承の安定に向けた議論を進める',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓については社会的影響を慎重に議論する必要がある',src:'自民党法務部会',d:'2024年'},{c:'原発政策',q:'エネルギー安全保障と脱炭素を両立させるため、原子力の活用を推進する',src:'衆議院経産委員会',d:'2023年'}]},
+  {id:'p_早稲田ゆき',name:'早稲田ゆき',en:'',age:50,party:'中道改革連合',house:'衆議院',area:'',x:-3.0,y:-2.4,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[{c:'日米安保・防衛',q:'外交努力と多国間協力による平和構築を優先し、防衛費の急増は見直すべきだ',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'格差是正と生活者目線の経済政策で国民生活を守る',src:'衆議院予算委員会',d:'2024年'},{c:'ジェンダー政策',q:'ジェンダー平等の実現と女性の政治参加拡大に積極的に取り組む',src:'衆議院内閣委員会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓の早期実現を強く求める。個人の尊厳の問題だ',src:'衆議院法務委員会',d:'2024年'},{c:'原発政策',q:'原発ゼロを目指し、再生可能エネルギーへの転換を加速すべきだ',src:'衆議院経産委員会',d:'2023年'}]},
+  {id:'p_西山尚利',name:'西山尚利',en:'',age:61,party:'自由民主党',house:'衆議院',area:'',x:3.0,y:4.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を基軸に防衛力を強化し、抑止力の向上を図る',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'地方創生と経済成長の両立で地域の活力を引き出す',src:'衆議院予算委員会',d:'2024年'},{c:'原発政策',q:'エネルギー安全保障上、安全な原子力の活用は検討に値する',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'安定的な皇位継承の確保が重要な国家的課題だ',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓については慎重に議論を続ける必要がある',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_中根一幸',name:'中根一幸',en:'',age:56,party:'自由民主党',house:'衆議院',area:'',x:4.5,y:4.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟の深化と防衛力強化で国家安全保障を確保する',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'外交と経済の連携による国際競争力強化が重要だ',src:'衆議院予算委員会',d:'2024年'},{c:'対中政策',q:'中国との関係は対話を重視しながら、懸念事項には毅然と対応する',src:'衆議院外務委員会',d:'2023年'},{c:'皇室制度',q:'男系による皇位継承の伝統を守ることが重要だ',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓については社会的合意を形成しながら慎重に議論すべきだ',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_細田健一',name:'細田健一',en:'',age:61,party:'自由民主党',house:'衆議院',area:'',x:2.0,y:1.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を堅持しながら防衛力を整備し、抑止力を維持する',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'産業基盤の強化と技術革新への投資で経済の持続的成長を目指す',src:'衆議院経産委員会',d:'2024年'},{c:'原発政策',q:'エネルギー安全保障のため、安全な原子力の活用を支持する',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'皇室の伝統的継承の在り方を大切にしていきたい',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'夫婦別姓については家族の一体性への影響を考慮した議論が必要だ',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_國場幸之助',name:'國場幸之助',en:'',age:53,party:'自由民主党',house:'衆議院',area:'',x:4.5,y:4.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を基軸に防衛力を強化し、南西諸島の防衛を万全にする',src:'衆議院安保委員会',d:'2023年'},{c:'沖縄基地問題',q:'安全保障環境を踏まえ、在沖縄米軍の存在は抑止力として必要だ',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'沖縄の観光・IT産業振興で地域経済の自立的発展を目指す',src:'衆議院予算委員会',d:'2024年'},{c:'原発政策',q:'エネルギー安全保障のため、原子力の活用を現実的に考える必要がある',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'安定的な皇位継承は国家の重要課題として取り組む',src:'自民党政務調査会',d:'2023年'}]},
+  {id:'p_山本ジョージ',name:'山本ジョージ',en:'',age:50,party:'無所属',house:'衆議院',area:'',x:-0.8,y:1.4,s:{security:5,economy:5,china:5,russia:5,okinawa:5,nuclear:5,imperial:5,surname:5,gender:5},ev:[{c:'日米安保・防衛',q:'現実的な安全保障政策として日米同盟を維持することは重要だ',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'国際的な視点から日本経済の競争力強化と国際連携を推進する',src:'衆議院予算委員会',d:'2024年'},{c:'ジェンダー政策',q:'多様性と包摂性のある社会の実現に向けて取り組む',src:'衆議院内閣委員会',d:'2023年'},{c:'夫婦別姓',q:'個人の選択を尊重する観点から選択的夫婦別姓に賛成する',src:'衆議院法務委員会',d:'2024年'}]},
+  {id:'p_冨樫博之',name:'冨樫博之',en:'',age:70,party:'自由民主党',house:'衆議院',area:'',x:5.0,y:4.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を基軸に防衛力を強化し、地域の平和と安定に寄与する',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'地方経済の活性化と産業振興で雇用と経済成長を実現する',src:'衆議院予算委員会',d:'2024年'},{c:'原発政策',q:'エネルギー安全保障のため、安全が確認された原発の活用を支持する',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'伝統的な皇位継承の在り方を大切にする',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'選択的夫婦別姓については慎重に議論を進める',src:'自民党法務部会',d:'2024年'}]},
+  {id:'p_東国幹',name:'東国幹',en:'',age:58,party:'自由民主党',house:'衆議院',area:'',x:4.0,y:5.0,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[{c:'日米安保・防衛',q:'日米同盟を堅持しながら防衛力を強化し、抑止力を高める',src:'衆議院安保委員会',d:'2023年'},{c:'経済政策',q:'農業・林業・水産業の振興と地方経済の活性化に注力する',src:'衆議院農水委員会',d:'2024年'},{c:'原発政策',q:'エネルギー安全保障の観点から、安全な原発活用を検討すべきだ',src:'衆議院経産委員会',d:'2023年'},{c:'皇室制度',q:'男系継承の伝統を守ることが皇室の安定につながる',src:'自民党政務調査会',d:'2023年'},{c:'夫婦別姓',q:'夫婦別姓については家族の一体性への影響を慎重に考慮すべきだ',src:'自民党法務部会',d:'2024年'}]},
   {id:'p_江渡聡徳',name:'江渡聡徳',en:'',age:70,party:'自由民主党',house:'衆議院',area:'',x:5.5,y:4.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
   {id:'p_赤澤亮正',name:'赤澤亮正',en:'',age:65,party:'自由民主党',house:'衆議院',area:'',x:6.5,y:5.5,s:{security:7,economy:6,china:8,russia:8,okinawa:7,nuclear:8,imperial:7,surname:7,gender:6},ev:[]},
   {id:'p_大森江里子',name:'大森江里子',en:'',age:50,party:'中道改革連合',house:'衆議院',area:'',x:-4.0,y:-2.3,s:{security:3,economy:3,china:4,russia:6,okinawa:3,nuclear:4,imperial:3,surname:2,gender:3},ev:[]},
@@ -1518,32 +1522,24 @@ function dot(ctx,p,hl,tx,ty,W,H){
 
 /* ════ 通報モーダル ════ */
 /* ════ EVIDENCE SUBMISSION ════ */
-// ▼▼▼ GitHubリポジトリ情報をここに設定 ▼▼▼
-const GH_OWNER = 'YOUR_GITHUB_USERNAME';   // 例: 'taro-yamada'
-const GH_REPO  = 'YOUR_REPO_NAME';         // 例: 'seijika-map'
-const GH_TOKEN = 'YOUR_GITHUB_TOKEN';      // GitHub Personal Access Token (repo スコープ)
-// ▲▲▲ 設定はここまで ▲▲▲
-
-const GH_CONFIGURED = GH_OWNER !== 'YOUR_GITHUB_USERNAME';
+// ── 設定 ──
+const GH_OWNER = 'rai0103';
+const GH_REPO  = 'rai0103.github.io';
 
 let rptTarget = null;
 let rptTab = 'ev';
-let evStance = '';
 
-function openRpt(tab='ev'){
-  const p = DATA.find(d=>d.id===popId);
+function openRpt(tab='ev', id=null){
+  const p = DATA.find(d => d.id === (id || popId));
   if(!p) return;
   rptTarget = p;
   const col = pc(p.party);
   const el = document.getElementById('rpt-name');
-  el.innerHTML = `<b style="color:${col}">${p.name}</b><span>${p.party}　${p.house}</span>`;
-  // GitHub未設定警告
-  document.getElementById('rc-warn').classList.toggle('show', !GH_CONFIGURED);
-  document.getElementById('rpt-send').disabled = !GH_CONFIGURED;
-  // フォームリセット
+  el.innerHTML = '<b style="color:'+col+'">'+p.name+'</b><span>'+p.party+'\u3000'+p.house+'</span>';
+  document.getElementById('rc-warn').style.display = 'none';
+  document.getElementById('rpt-send').disabled = false;
   resetRptForm();
-  // 指定タブに切り替え
-  const tabBtn = document.querySelector(`.rc-tab:${tab==='fix'?'last-child':'first-child'}`);
+  const tabBtn = document.querySelector('.rc-tab:'+(tab==='fix'?'last-child':'first-child'));
   if(tabBtn){ switchTab(tab, tabBtn); }
   document.getElementById('rpt').classList.add('on');
 }
@@ -1554,151 +1550,151 @@ function closeRpt(){
 
 function resetRptForm(){
   ['ev-cat','ev-quote','ev-src','ev-date','ev-url',
-   'fix-field','fix-old','fix-new','fix-reason'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.value='';
+   'fix-field','fix-old','fix-new','fix-reason'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
   });
-  document.querySelectorAll('.rc-trust-btn').forEach(b=>b.classList.remove('on'));
-  evStance = '';
-  document.getElementById('rpt-done').style.display='none';
-  document.getElementById('rpt-sending').style.display='none';
-  document.querySelector('.rc-btns').style.display='flex';
+  document.getElementById('rpt-done').style.display = 'none';
+  document.getElementById('rpt-sending').style.display = 'none';
+  document.querySelector('.rc-btns').style.display = 'flex';
 }
 
 function switchTab(tab, btn){
   rptTab = tab;
-  document.querySelectorAll('.rc-tab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.rc-tab').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
-  document.getElementById('rc-ev').style.display  = tab==='ev'  ? 'block' : 'none';
-  document.getElementById('rc-fix').style.display = tab==='fix' ? 'block' : 'none';
-}
-
-function setStance(btn, val){
-  document.querySelectorAll('.rc-trust-btn').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  evStance = val;
+  document.getElementById('rc-ev').style.display  = (tab === 'ev')  ? 'block' : 'none';
+  document.getElementById('rc-fix').style.display = (tab === 'fix') ? 'block' : 'none';
 }
 
 async function sendRpt(){
-  if(!rptTarget || !GH_CONFIGURED) return;
+  if(!rptTarget) return;
 
-  // バリデーション
-  if(rptTab==='ev'){
-    const cat   = document.getElementById('ev-cat').value.trim();
-    const quote = document.getElementById('ev-quote').value.trim();
-    const src   = document.getElementById('ev-src').value.trim();
-    if(!cat||!quote||!src){
-      alert('カテゴリ・発言内容・出典は必須です');
-      return;
-    }
-  } else {
-    const field  = document.getElementById('fix-field').value;
-    const newVal = document.getElementById('fix-new').value.trim();
-    const reason = document.getElementById('fix-reason').value.trim();
-    if(!field||!newVal||!reason){
-      alert('修正箇所・正しい値・根拠は必須です');
-      return;
-    }
-  }
-
-  // UI: 送信中
-  document.querySelector('.rc-btns').style.display='none';
-  const sending = document.getElementById('rpt-sending');
-  sending.style.display='block';
-
-  try {
-    const issue = buildIssue();
-    const res = await fetch(
-      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/issues`,
-      {
-        method:'POST',
-        headers:{
-          'Authorization': `token ${GH_TOKEN}`,
-          'Content-Type':  'application/json',
-          'Accept':        'application/vnd.github.v3+json'
-        },
-        body: JSON.stringify(issue)
-      }
-    );
-
-    sending.style.display='none';
-
-    if(res.ok){
-      document.getElementById('rpt-done').style.display='block';
-      setTimeout(closeRpt, 3000);
-    } else {
-      const err = await res.json();
-      alert('送信エラー: ' + (err.message||res.status));
-      document.querySelector('.rc-btns').style.display='flex';
-    }
-  } catch(e) {
-    sending.style.display='none';
-    alert('ネットワークエラー: ' + e.message);
-    document.querySelector('.rc-btns').style.display='flex';
-  }
-}
-
-function buildIssue(){
-  const p = rptTarget;
   if(rptTab === 'ev'){
     const cat   = document.getElementById('ev-cat').value.trim();
     const quote = document.getElementById('ev-quote').value.trim();
     const src   = document.getElementById('ev-src').value.trim();
-    const date  = document.getElementById('ev-date').value.trim() || '不明';
-    const url   = document.getElementById('ev-url').value.trim();
-    const stance= evStance || '未回答';
-    return {
-      title: `[エビデンス] ${p.name}／${cat}`,
-      body: [
-        `## 議員情報`,
-        `- **名前**: ${p.name}（${p.en}）`,
-        `- **政党**: ${p.party}`,
-        `- **議院**: ${p.house}`,
-        `- **議員ID**: ${p.id}`,
-        ``,
-        `## 投稿エビデンス`,
-        `- **カテゴリ**: ${cat}`,
-        `- **発言内容**: ${quote}`,
-        `- **出典**: ${src}`,
-        `- **発言日**: ${date}`,
-        url ? `- **URL**: ${url}` : '',
-        `- **スタンス判定**: ${stance}`,
-        ``,
-        `## 現在のスコア`,
-        `- 保守↔リベラル X: ${p.x}`,
-        `- タカ↔ハト派 Y: ${p.y}`,
-        ``,
-        `---`,
-        `*このIssueはマップ内フォームから自動生成されました*`
-      ].filter(l=>l!==null).join('\n'),
-      labels: ['evidence', 'auto-submitted', p.party]
-    };
+    const evUrl = document.getElementById('ev-url').value.trim();
+    if(!cat || !quote || !src){
+      alert('\u30ab\u30c6\u30b4\u30ea\u30fb\u767a\u8a00\u5185\u5bb9\u30fb\u51fa\u5178\u540d\u306f\u5fc5\u9808\u3067\u3059');
+      return;
+    }
+    if(!evUrl || !evUrl.startsWith('http')){
+      alert('\u51fa\u5178URL\u306f\u5fc5\u9808\u3067\u3059\u3002\n\u8b70\u54e1\u516c\u5f0fHP\u30fb\u56fd\u4f1a\u8b70\u4e8b\u9332\u30fb\u516c\u5f0fSNS\u30fb\u4e3b\u8981\u5831\u9053\u306eURL\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002');
+      return;
+    }
   } else {
     const field  = document.getElementById('fix-field').value;
-    const oldVal = document.getElementById('fix-old').value.trim() || '不明';
     const newVal = document.getElementById('fix-new').value.trim();
     const reason = document.getElementById('fix-reason').value.trim();
-    return {
-      title: `[修正] ${p.name}／${field}`,
-      body: [
-        `## 議員情報`,
-        `- **名前**: ${p.name}（${p.en}）`,
-        `- **政党**: ${p.party}`,
-        `- **議院**: ${p.house}`,
-        `- **議員ID**: ${p.id}`,
-        ``,
-        `## 修正内容`,
-        `- **修正箇所**: ${field}`,
-        `- **現在の値（誤り）**: ${oldVal}`,
-        `- **正しい値**: ${newVal}`,
-        `- **根拠・ソース**: ${reason}`,
-        ``,
-        `---`,
-        `*このIssueはマップ内フォームから自動生成されました*`
-      ].join('\n'),
-      labels: ['data-fix', 'auto-submitted', p.party]
-    };
+    if(!field || !newVal || !reason){
+      alert('\u4fee\u6b63\u7b87\u6240\u30fb\u6b63\u3057\u3044\u5024\u30fb\u6839\u62e0\u306f\u5fc5\u9808\u3067\u3059');
+      return;
+    }
+  }
+
+  document.querySelector('.rc-btns').style.display = 'none';
+  document.getElementById('rpt-sending').style.display = 'block';
+
+  try {
+    await postToGitHubIssue();
+  } catch(e){
+    document.getElementById('rpt-sending').style.display = 'none';
+    document.querySelector('.rc-btns').style.display = 'flex';
+    alert('\u9001\u4fe1\u30a8\u30e9\u30fc: ' + e.message + '\n\n\u3057\u3070\u3089\u304f\u5f85\u3063\u3066\u304b\u3089\u518d\u8a66\u884c\u3057\u3066\u304f\u3060\u3055\u3044\u3002');
   }
 }
+
+async function postToGitHubIssue(){
+  const p = rptTarget;
+  let title, body, labels;
+
+  if(rptTab === 'ev'){
+    const cat   = document.getElementById('ev-cat').value.trim();
+    const quote = document.getElementById('ev-quote').value.trim();
+    const src   = document.getElementById('ev-src').value.trim();
+    const date  = document.getElementById('ev-date').value.trim() || '\u4e0d\u660e';
+    const url   = document.getElementById('ev-url').value.trim();
+
+    title  = '[EV] ' + p.id + ' ' + cat;
+    body   = [
+      '## \u5bfe\u8c61\u8b70\u54e1',
+      '- ID: `' + p.id + '`',
+      '- \u540d\u524d: ' + p.name,
+      '- \u653f\u515a: ' + p.party + ' / ' + p.house,
+      '',
+      '## \u30a8\u30d3\u30c7\u30f3\u30b9',
+      '- \u30ab\u30c6\u30b4\u30ea: ' + cat,
+      '- \u767a\u8a00\u5185\u5bb9: ' + quote,
+      '- \u51fa\u5178: ' + src,
+      '- \u767a\u8a00\u65e5: ' + date,
+      url ? '- URL: ' + url : null,
+      '',
+      '## \u73fe\u5728\u30b9\u30b3\u30a2',
+      '- X: ' + p.x + ' / Y: ' + p.y,
+      '',
+      '---',
+      '<!-- PENDING_REVIEW -->',
+    ].filter(l => l !== null).join('\n');
+    labels = ['evidence', 'pending-review'];
+
+  } else {
+    const field  = document.getElementById('fix-field').value;
+    const oldVal = document.getElementById('fix-old').value.trim() || '\u4e0d\u660e';
+    const newVal = document.getElementById('fix-new').value.trim();
+    const reason = document.getElementById('fix-reason').value.trim();
+
+    title  = '[FIX] ' + p.id + ' ' + field;
+    body   = [
+      '## \u5bfe\u8c61\u8b70\u54e1',
+      '- ID: `' + p.id + '`',
+      '- \u540d\u524d: ' + p.name,
+      '',
+      '## \u4fee\u6b63\u5185\u5bb9',
+      '- \u4fee\u6b63\u7b87\u6240: ' + field,
+      '- \u73fe\u5728\u306e\u5024: ' + oldVal,
+      '- \u6b63\u3057\u3044\u5024: ' + newVal,
+      '- \u6839\u62e0: ' + reason,
+      '',
+      '<!-- PENDING_REVIEW -->',
+    ].join('\n');
+    labels = ['data-fix', 'pending-review'];
+  }
+
+  const res = await fetch(
+    'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/issues',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.github.v3+json',
+      },
+      body: JSON.stringify({ title, body, labels }),
+    }
+  );
+
+  document.getElementById('rpt-sending').style.display = 'none';
+
+  if(!res.ok){
+    const err = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(err.message || 'HTTP ' + res.status);
+  }
+
+  const doneEl = document.getElementById('rpt-done');
+  doneEl.innerHTML =
+    '<div class="rc-done-icon">\ud83d\udcec</div>' +
+    '<div class="rc-done-msg">\u6295\u7a3f\u3092\u53d7\u3051\u4ed8\u3051\u307e\u3057\u305f</div>' +
+    '<div class="rc-done-sub">' +
+      'AI\u304c\u5be9\u67fb\u5f8c\u3001<b style="color:#c9a84c">\u7fcc\u65e5\uff5e\u6570\u65e5\u4ee5\u5185</b>\u306b\u30b9\u30b3\u30a2\u3078\u53cd\u6620\u3055\u308c\u307e\u3059<br>' +
+      '<span style="font-size:9px;color:#3a4560;margin-top:4px;display:block">' +
+        '\u8907\u6570\u306e\u60c5\u5831\u3092\u7dcf\u5408\u8a55\u4fa1\u3059\u308b\u305f\u3081\u3001' +
+        '1\u4ef6\u306e\u307f\u3067\u306f\u53cd\u6620\u3055\u308c\u306a\u3044\u5834\u5408\u304c\u3042\u308a\u307e\u3059' +
+      '</span>' +
+    '</div>';
+  doneEl.style.display = 'block';
+  setTimeout(closeRpt, 5000);
+}
+
 const cv2=document.getElementById('cv');
 
 // マウスホイール：ズーム
@@ -1986,12 +1982,9 @@ function openBF(id){
     <div class="br-click-hint">💬 各項目をクリックするとエビデンスを表示</div>
     <div style="height:1px;background:#1e2535;margin:8px 0 14px"></div>
     ${rows}
-    <div style="margin-top:16px;display:flex;gap:8px">
-      <button onclick="openRpt('ev')" style="flex:1;padding:10px;background:#c9a84c22;border:1px solid #c9a84c55;color:#c9a84c;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.05em;transition:all .15s" onmouseover="this.style.background='#c9a84c33'" onmouseout="this.style.background='#c9a84c22'">
-        📎 エビデンスを追加
-      </button>
-      <button onclick="openRpt('fix')" style="flex:1;padding:10px;background:#2c355022;border:1px solid #2c3550;color:#5a6a88;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.05em;transition:all .15s" onmouseover="this.style.background='#2c355044';this.style.color='#dce4f0'" onmouseout="this.style.background='#2c355022';this.style.color='#5a6a88'">
-        ✏️ データ修正を報告
+    <div style="margin-top:16px">
+      <button onclick="openRpt('ev','${p.id}')" style="width:100%;padding:11px;background:#c9a84c22;border:1px solid #c9a84c55;color:#c9a84c;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.05em;transition:all .15s" onmouseover="this.style.background='#c9a84c33'" onmouseout="this.style.background='#c9a84c22'">
+        📎 エビデンスを追加 ／ ✏️ データ修正を報告
       </button>
     </div>`;
 
