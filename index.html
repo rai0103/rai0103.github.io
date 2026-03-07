@@ -1463,8 +1463,7 @@ function dot(ctx,p,hl,tx,ty,W,H){
 const GH_OWNER        = 'rai0103';
 const GH_REPO         = 'rai0103.github.io';
 // Issues書き込み専用トークン（GitHub Secretsから埋め込み）
-const GH_ISSUES_TOKEN = '%%ISSUES_TOKEN%%';
-
+const WORKER_URL = 'https://politician-map-issues.shinichiogasawara0103.workers.dev';
 let rptTarget = null;
 let rptTab = 'ev';
 
@@ -1635,18 +1634,13 @@ async function postToGitHubIssue(){
     }
   }
 
-  const res = await fetch(
-    'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/issues',
-    {
+  const res = await fetch(WORKER_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/vnd.github.v3+json',
-        'Authorization': 'Bearer ' + GH_ISSUES_TOKEN,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title, body, labels }),
     }
-  );
+  );  
+ 
 
   document.getElementById('rpt-sending').style.display = 'none';
 
