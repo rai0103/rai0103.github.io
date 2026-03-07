@@ -1,0 +1,66 @@
+name: 政治家データ自動更新
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  update:
+    # AUTO_UPDATE タグがあるIssueのみ処理
+    if: contains(github.event.issue.body, '<!-- AUTO_UPDATE -->')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      - name: チェックアウト
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 依存インストール
+        run: pip install anthropic requests
+
+      - name: データ更新スクリプト実行
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: python scripts/update_politician.py
+
+      - name: 変更をコミット・プッシュ
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --staged --quiet; then
+            echo "変更なし"
+          else
+            git commit -m "🤖 Auto: Issue #${{ github.event.issue.number }} を反映"
+            git push
+          fi
+
+      - name: Issueにコメントを追加
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '✅ **自動処理完了** — index.html を更新し、GitHub Pages に反映しました。'
+            });
+            github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: 'closed',
+              labels: ['completed']
+            });
