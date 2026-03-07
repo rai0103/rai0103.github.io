@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>政治家マップ 管理パネル</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#07090f;
+  --bg2:#0e1118;
+  --bg3:#141820;
+  --border:#1e2535;
+  --border2:#2c3550;
+  --gold:#c9a84c;
+  --gold2:#e0b84c;
+  --text:#dce4f0;
+  --muted:#5a6a88;
+  --green:#3dd68c;
+  --red:#e8354a;
+  --blue:#4a7fe8;
+}
+html,body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;min-height:100vh;}
+
+/* ヘッダー */
+#hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{font-size:16px;font-weight:900;color:#fff;}
+.logo span{color:var(--gold);}
+.logo small{font-size:10px;color:var(--muted);font-weight:400;margin-left:8px;}
+.back-link{font-size:11px;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:4px;transition:color .15s;}
+.back-link:hover{color:var(--gold);}
+
+/* レイアウト */
+.container{max-width:900px;margin:0 auto;padding:24px 20px;}
+
+/* タブ */
+.tabs{display:flex;gap:0;border:1px solid var(--border2);margin-bottom:24px;}
+.tab{flex:1;padding:12px 16px;background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:.05em;}
+.tab:hover:not(.on){color:var(--text);background:rgba(255,255,255,.03);}
+.tab.on{background:rgba(201,168,76,.1);color:var(--gold);border-bottom:2px solid var(--gold);}
+
+/* パネル */
+.panel{display:none;}
+.panel.on{display:block;}
+
+/* セクション */
+.section{background:var(--bg3);border:1px solid var(--border2);padding:20px;margin-bottom:16px;}
+.section-title{font-size:11px;font-weight:900;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+
+/* グリッド */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+@media(max-width:600px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+
+/* フォームフィールド */
+.field{display:flex;flex-direction:column;gap:5px;}
+.field.full{grid-column:1/-1;}
+label{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.04em;}
+label span{color:var(--red);margin-left:2px;}
+input,select,textarea{background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-size:13px;padding:9px 11px;outline:none;transition:border-color .15s;font-family:inherit;}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);}
+input::placeholder,textarea::placeholder{color:var(--muted);}
+textarea{resize:vertical;min-height:80px;line-height:1.6;}
+select option{background:var(--bg3);}
+
+/* スコアスライダー */
+.score-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+@media(max-width:600px){.score-grid{grid-template-columns:1fr;}}
+.score-item{display:flex;flex-direction:column;gap:4px;}
+.score-label{font-size:10px;color:var(--muted);}
+.score-row{display:flex;align-items:center;gap:8px;}
+.score-row input[type=range]{flex:1;accent-color:var(--gold);height:3px;}
+.score-val{font-size:12px;font-weight:700;color:var(--gold);width:16px;text-align:center;font-family:monospace;}
+
+/* 座標入力 */
+.coord-hint{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.5;}
+.coord-visual{background:var(--bg2);border:1px solid var(--border);height:120px;position:relative;margin-top:8px;cursor:crosshair;}
+.coord-axis-x{position:absolute;top:50%;left:0;right:0;height:1px;background:var(--border2);}
+.coord-axis-y{position:absolute;top:0;bottom:0;left:50%;width:1px;background:var(--border2);}
+.coord-labels{position:absolute;inset:0;pointer-events:none;}
+.coord-labels span{position:absolute;font-size:9px;color:var(--muted);}
+.coord-labels .cl-top{top:4px;left:50%;transform:translateX(-50%);}
+.coord-labels .cl-bottom{bottom:4px;left:50%;transform:translateX(-50%);}
+.coord-labels .cl-left{left:4px;top:50%;transform:translateY(-50%);}
+.coord-labels .cl-right{right:4px;top:50%;transform:translateY(-50%);}
+.coord-dot{position:absolute;width:10px;height:10px;border-radius:50%;background:var(--gold);transform:translate(-50%,-50%);pointer-events:none;transition:left .1s,top .1s;}
+
+/* エビデンス入力 */
+.ev-list{display:flex;flex-direction:column;gap:10px;}
+.ev-item{background:var(--bg2);border:1px solid var(--border);padding:14px;position:relative;}
+.ev-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.ev-num{font-size:10px;color:var(--gold);font-weight:700;}
+.ev-remove{background:none;border:1px solid var(--border2);color:var(--muted);font-size:10px;padding:2px 8px;cursor:pointer;}
+.ev-remove:hover{border-color:var(--red);color:var(--red);}
+.ev-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+@media(max-width:500px){.ev-grid{grid-template-columns:1fr;}}
+.add-ev-btn{width:100%;padding:10px;background:none;border:1px dashed var(--border2);color:var(--muted);font-size:11px;cursor:pointer;margin-top:8px;transition:all .15s;}
+.add-ev-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+/* プレビュー */
+.preview-box{background:var(--bg2);border:1px solid var(--border);padding:14px;font-family:monospace;font-size:11px;line-height:1.7;color:#a0b0c8;max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;}
+
+/* ボタン */
+.btn-row{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+.btn{padding:11px 24px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.06em;border:none;transition:all .15s;}
+.btn-primary{background:var(--gold);color:var(--bg);}
+.btn-primary:hover{background:var(--gold2);}
+.btn-secondary{background:none;border:1px solid var(--border2);color:var(--muted);}
+.btn-secondary:hover{border-color:var(--text);color:var(--text);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* 送信状態 */
+.send-status{display:none;padding:16px;text-align:center;font-size:12px;}
+.send-status.sending{display:block;color:var(--muted);}
+.send-status.done{display:block;color:var(--green);}
+.send-status.error{display:block;color:var(--red);}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;margin-right:8px;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 設定パネル */
+.cfg-item{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.cfg-desc{font-size:10px;color:var(--muted);line-height:1.5;margin-top:3px;}
+.token-input{font-family:monospace;font-size:12px;}
+.save-badge{display:none;font-size:10px;color:var(--green);margin-left:8px;}
+
+/* 情報バー */
+.info-bar{background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);padding:10px 14px;font-size:11px;color:#a08c40;line-height:1.6;margin-bottom:20px;}
+.info-bar b{color:var(--gold);}
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <div class="logo">政治家<span>マップ</span><small>管理パネル</small></div>
+  <a href="index.html" class="back-link">← 地図に戻る</a>
+</div>
+
+<div class="container">
+
+  <div class="info-bar">
+    ⚙️ このページはローカルまたはGitHub Pagesで動作します。送信するとGitHub Issueが作成され、<b>GitHub Actionsが自動でindex.htmlを更新</b>します。
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" onclick="switchTab('add')">➕ 政治家を追加</button>
+    <button class="tab" onclick="switchTab('ev')">📎 エビデンス追加</button>
+    <button class="tab" onclick="switchTab('fix')">✏️ データ修正</button>
+    <button class="tab" onclick="switchTab('cfg')">⚙️ 設定</button>
+  </div>
+
+  <!-- ===== 政治家追加 ===== -->
+  <div id="panel-add" class="panel on">
+
+    <div class="section">
+      <div class="section-title">基本情報</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>名前<span>*</span></label>
+          <input id="add-name" type="text" placeholder="例：田中太郎">
+        </div>
+        <div class="field">
+          <label>英語名（任意）</label>
+          <input id="add-en" type="text" placeholder="例：Taro Tanaka">
+        </div>
+        <div class="field">
+          <label>年齢<span>*</span></label>
+          <input id="add-age" type="number" placeholder="例：55" min="18" max="120">
+        </div>
+        <div class="field">
+          <label>政党<span>*</span></label>
+          <select id="add-party">
+            <option value="">選択してください</option>
+            <option>自由民主党</option>
+            <option>立憲民主党</option>
+            <option>日本維新の会</option>
+            <option>公明党</option>
+            <option>国民民主党</option>
+            <option>日本共産党</option>
+            <option>れいわ新選組</option>
+            <option>参政党</option>
+            <option>チームみらい</option>
+            <option>日本保守党</option>
+            <option>社会民主党</option>
+            <option>中道改革連合</option>
+            <option>沖縄の風</option>
+            <option>無所属</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>院<span>*</span></label>
+          <select id="add-house">
+            <option value="衆議院">衆議院</option>
+            <option value="参議院">参議院</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>選挙区（任意）</label>
+          <input id="add-area" type="text" placeholder="例：東京1区">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">思想座標</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>X軸（保守↔リベラル）<span>*</span> <span id="add-x-v" style="color:var(--gold);font-family:monospace">0.0</span></label>
+          <input id="add-x" type="range" min="-10" max="10" step="0.1" value="0" oninput="document.getElementById('add-x-v').textContent=parseFloat(this.value).toFixed(1);updateDot()">
+          <div class="coord-hint">−10=完全リベラル　0=中道　+10=完全保守</div>
+        </div>
+        <div class="field">
+          <label>Y軸（タカ派↔ハト派）<span>*</span> <span id="add-y-v" style="color:var(--gold);font-family:monospace">0.0</span></label>
+          <input id="add-y" type="range" min="-10" max="10" step="0.1" value="0" oninput="document.getElementById('add-y-v').textContent=parseFloat(this.value).toFixed(1);updateDot()">
+          <div class="coord-hint">−10=完全ハト派　0=中道　+10=完全タカ派</div>
+        </div>
+      </div>
+      <div class="coord-visual" id="coord-visual" onclick="handleCoordClick(event)">
+        <div class="coord-axis-x"></div>
+        <div class="coord-axis-y"></div>
+        <div class="coord-labels">
+          <span class="cl-top">タカ派</span>
+          <span class="cl-bottom">ハト派</span>
+          <span class="cl-left">リベラル</span>
+          <span class="cl-right">保守</span>
+        </div>
+        <div class="coord-dot" id="coord-dot"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">政策スコア（1=左/ハト派、9=右/タカ派）</div>
+      <div class="score-grid">
+        <div class="score-item">
+          <div class="score-label">安全保障</div>
+          <div class="score-row">
+            <input type="range" min="1" max="9" value="5" id="s-security" oninput="this.nextElementSibling.textContent=this.value">
+            <span class="score-val">5</span>
+          </div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">経済政策</div>
+          <div class="score-row">
+            <input type="range" min="1" max="9" value="5" id="s-economy" oninput="this.nextElementSibling.textContent=this.value">
+            <span class="score-val">5</span>
+          </div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">対中政策</div>
+          <div class="score-row">
+            <input type="range" min="1" max="9" value="5" id="s-china" oninput="this.nextElementSibling.textContent=this.value">
+            <span class="score-val">5</span>
+          </div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">対ロ政策</div>
+          <div class="score-row">
+            <input type="range" min="1" max="9" value="5" id="s-russia" oninput="this.nextElementSibling.textContent=this.value">
+            <span class="score-val">5</span>
+          </div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">沖縄基地</div>
+          <div class="score-row">
+            <input type="range" min="1" max="9" value="5" id="s-okinawa" oninput="this.nextElementSibling.textContent=this.value">
+            <span class="score-val">5</span>
+          </div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">原発政策</div>
+          <div class="score-row">
+            <input type="range" min="1" max="9" value="5" id="s-nuclear" oninput="this.nextElementSibling.textContent=this.value">
+            <span class="score-val">5</span>
+          </div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">皇室制度</div>
+          <div class="score-row">
+            <input type="range" min="1" max="9" value="5" id="s-imperial" oninput="this.nextElementSibling.textContent=this.value">
+            <span class="score-val">5</span>
+          </div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">夫婦別姓</div>
+          <div class="score-row">
+            <input type="range" min="1" max="9" value="5" id="s-surname" oninput="this.nextElementSibling.textContent=this.value">
+            <span class="score-val">5</span>
+          </div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">ジェンダー</div>
+          <div class="score-row">
+            <input type="range" min="1" max="9" value="5" id="s-gender" oninput="this.nextElementSibling.textContent=this.value">
+            <span class="score-val">5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">エビデンス（発言録）</div>
+      <div class="ev-list" id="add-ev-list"></div>
+      <button class="add-ev-btn" onclick="addEvRow()">＋ エビデンスを追加</button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">プレビュー（Issue本文）</div>
+      <div class="preview-box" id="add-preview">フォームを入力するとここにプレビューが表示されます</div>
+    </div>
+
+    <div class="send-status" id="add-status"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="resetForm()">リセット</button>
+      <button class="btn btn-primary" id="add-submit" onclick="submitAdd()">📮 GitHub Issueとして送信</button>
+    </div>
+  </div>
+
+  <!-- ===== エビデンス追加 ===== -->
+  <div id="panel-ev" class="panel">
+    <div class="section">
+      <div class="section-title">対象政治家を検索</div>
+      <div class="field">
+        <label>政治家名<span>*</span></label>
+        <input id="ev-search" type="text" placeholder="名前で検索…" oninput="searchPolitician(this.value,'ev')">
+      </div>
+      <div id="ev-search-result" style="margin-top:8px;display:none;"></div>
+      <div id="ev-target-bar" style="display:none;margin-top:10px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border2);font-size:12px;font-weight:700;"></div>
+    </div>
+    <div class="section" id="ev-form-section" style="display:none;">
+      <div class="section-title">エビデンス内容</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>カテゴリ<span>*</span></label>
+          <select id="ev-cat">
+            <option>日米安保・防衛</option>
+            <option>経済政策</option>
+            <option>対中政策</option>
+            <option>対ロ政策</option>
+            <option>沖縄基地問題</option>
+            <option>原発政策</option>
+            <option>皇室制度</option>
+            <option>夫婦別姓</option>
+            <option>ジェンダー政策</option>
+            <option>その他</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>発言日</label>
+          <input id="ev-date" type="text" placeholder="例：2024年3月">
+        </div>
+        <div class="field full">
+          <label>発言内容<span>*</span></label>
+          <textarea id="ev-quote" placeholder="発言内容を入力…" rows="4"></textarea>
+        </div>
+        <div class="field">
+          <label>出典<span>*</span></label>
+          <input id="ev-src" type="text" placeholder="例：衆議院本会議">
+        </div>
+        <div class="field">
+          <label>URL（任意）</label>
+          <input id="ev-url" type="text" placeholder="https://...">
+        </div>
+      </div>
+    </div>
+    <div class="send-status" id="ev-status"></div>
+    <div class="btn-row" id="ev-btn-row" style="display:none;">
+      <button class="btn btn-primary" onclick="submitEv()">📮 送信</button>
+    </div>
+  </div>
+
+  <!-- ===== データ修正 ===== -->
+  <div id="panel-fix" class="panel">
+    <div class="section">
+      <div class="section-title">対象政治家を検索</div>
+      <div class="field">
+        <label>政治家名<span>*</span></label>
+        <input id="fix-search" type="text" placeholder="名前で検索…" oninput="searchPolitician(this.value,'fix')">
+      </div>
+      <div id="fix-search-result" style="margin-top:8px;display:none;"></div>
+      <div id="fix-target-bar" style="display:none;margin-top:10px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border2);font-size:12px;font-weight:700;"></div>
+    </div>
+    <div class="section" id="fix-form-section" style="display:none;">
+      <div class="section-title">修正内容</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>修正項目<span>*</span></label>
+          <select id="fix-field">
+            <option value="name">名前</option>
+            <option value="en">英語名</option>
+            <option value="age">年齢</option>
+            <option value="party">政党</option>
+            <option value="house">院</option>
+            <option value="area">選挙区</option>
+            <option value="x">X座標</option>
+            <option value="y">Y座標</option>
+            <option value="score">政策スコア</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>現在の値</label>
+          <input id="fix-old" type="text" placeholder="現在の値（任意）">
+        </div>
+        <div class="field full">
+          <label>正しい値<span>*</span></label>
+          <input id="fix-new" type="text" placeholder="修正後の値">
+        </div>
+        <div class="field full">
+          <label>修正理由・根拠<span>*</span></label>
+          <textarea id="fix-reason" placeholder="なぜ修正が必要か、根拠とともに記入してください" rows="3"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="send-status" id="fix-status"></div>
+    <div class="btn-row" id="fix-btn-row" style="display:none;">
+      <button class="btn btn-primary" onclick="submitFix()">📮 送信</button>
+    </div>
+  </div>
+
+  <!-- ===== 設定 ===== -->
+  <div id="panel-cfg" class="panel">
+    <div class="section">
+      <div class="section-title">GitHub 設定</div>
+      <div class="cfg-item">
+        <label>GitHub Personal Access Token</label>
+        <input id="cfg-token" type="password" class="token-input" placeholder="ghp_xxxx または github_pat_xxxx">
+        <div class="cfg-desc">Issue作成権限（<code>repo</code>スコープ）が必要です。Settings → Developer settings → Personal access tokensで生成してください。ブラウザのlocalStorageに保存されます。</div>
+      </div>
+      <div class="cfg-item">
+        <label>リポジトリオーナー</label>
+        <input id="cfg-owner" type="text" value="rai0103">
+      </div>
+      <div class="cfg-item">
+        <label>リポジトリ名</label>
+        <input id="cfg-repo" type="text" value="rai0103.github.io">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveConfig()">💾 設定を保存</button>
+        <span class="save-badge" id="cfg-saved">✓ 保存しました</span>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">GitHub Actions 設定状況</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.8;">
+        <div>✅ <code>ANTHROPIC_API_KEY</code> → Claude APIキー（設定済）</div>
+        <div>✅ <code>politicianmap-actions</code> → GitHubトークン（設定済）</div>
+        <div style="margin-top:10px;color:#a08c40;">ワークフローファイル: <code>.github/workflows/update-data.yml</code></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ===== 設定 =====
+let CFG = {
+  token: localStorage.getItem('admin_gh_token') || '',
+  owner: localStorage.getItem('admin_gh_owner') || 'rai0103',
+  repo:  localStorage.getItem('admin_gh_repo')  || 'rai0103.github.io',
+};
+
+window.onload = () => {
+  document.getElementById('cfg-token').value = CFG.token;
+  document.getElementById('cfg-owner').value = CFG.owner;
+  document.getElementById('cfg-repo').value  = CFG.repo;
+  addEvRow();
+  updatePreview();
+  updateDot();
+};
+
+function saveConfig(){
+  CFG.token = document.getElementById('cfg-token').value.trim();
+  CFG.owner = document.getElementById('cfg-owner').value.trim();
+  CFG.repo  = document.getElementById('cfg-repo').value.trim();
+  localStorage.setItem('admin_gh_token', CFG.token);
+  localStorage.setItem('admin_gh_owner', CFG.owner);
+  localStorage.setItem('admin_gh_repo',  CFG.repo);
+  const badge = document.getElementById('cfg-saved');
+  badge.style.display = 'inline';
+  setTimeout(()=>badge.style.display='none', 2000);
+}
+
+// ===== タブ切り替え =====
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('on', ['add','ev','fix','cfg'][i]===id);
+  });
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.getElementById('panel-'+id).classList.add('on');
+}
+
+// ===== 座標ビジュアル =====
+function updateDot(){
+  const x = parseFloat(document.getElementById('add-x').value);
+  const y = parseFloat(document.getElementById('add-y').value);
+  const dot = document.getElementById('coord-dot');
+  const pct_x = (x + 10) / 20 * 100;
+  const pct_y = (10 - y) / 20 * 100; // Y軸反転
+  dot.style.left = pct_x + '%';
+  dot.style.top  = pct_y + '%';
+  updatePreview();
+}
+
+function handleCoordClick(e){
+  const rect = e.currentTarget.getBoundingClientRect();
+  const px = (e.clientX - rect.left) / rect.width;
+  const py = (e.clientY - rect.top)  / rect.height;
+  const x = (px * 20 - 10).toFixed(1);
+  const y = (10 - py * 20).toFixed(1);
+  document.getElementById('add-x').value = x;
+  document.getElementById('add-y').value = y;
+  document.getElementById('add-x-v').textContent = x;
+  document.getElementById('add-y-v').textContent = y;
+  updateDot();
+}
+
+// ===== エビデンス行 =====
+let evCount = 0;
+function addEvRow(){
+  evCount++;
+  const n = evCount;
+  const cats = ['日米安保・防衛','経済政策','対中政策','対ロ政策','沖縄基地問題','原発政策','皇室制度','夫婦別姓','ジェンダー政策','その他'];
+  const opts = cats.map(c=>`<option>${c}</option>`).join('');
+  const div = document.createElement('div');
+  div.className = 'ev-item';
+  div.id = 'ev-row-' + n;
+  div.innerHTML = `
+    <div class="ev-item-header">
+      <span class="ev-num">エビデンス #${n}</span>
+      <button class="ev-remove" onclick="removeEvRow(${n})">削除</button>
+    </div>
+    <div class="ev-grid">
+      <div class="field">
+        <label>カテゴリ</label>
+        <select class="ev-r-cat" onchange="updatePreview()">${opts}</select>
+      </div>
+      <div class="field">
+        <label>発言日</label>
+        <input class="ev-r-date" type="text" placeholder="例：2024年3月" oninput="updatePreview()">
+      </div>
+      <div class="field" style="grid-column:1/-1">
+        <label>発言内容<span style="color:var(--red)">*</span></label>
+        <textarea class="ev-r-quote" rows="3" placeholder="発言内容…" oninput="updatePreview()"></textarea>
+      </div>
+      <div class="field">
+        <label>出典</label>
+        <input class="ev-r-src" type="text" placeholder="例：衆議院本会議" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <label>URL（任意）</label>
+        <input class="ev-r-url" type="text" placeholder="https://..." oninput="updatePreview()">
+      </div>
+    </div>`;
+  document.getElementById('add-ev-list').appendChild(div);
+  div.querySelectorAll('select').forEach(s=>s.onchange=updatePreview);
+}
+
+function removeEvRow(n){
+  const el = document.getElementById('ev-row-'+n);
+  if(el) el.remove();
+  updatePreview();
+}
+
+// ===== プレビュー =====
+function getEvRows(){
+  return Array.from(document.querySelectorAll('#add-ev-list .ev-item')).map(row=>({
+    c: row.querySelector('.ev-r-cat').value,
+    q: row.querySelector('.ev-r-quote').value.trim(),
+    src: row.querySelector('.ev-r-src').value.trim(),
+    d: row.querySelector('.ev-r-date').value.trim() || '不明',
+    url: row.querySelector('.ev-r-url').value.trim(),
+  })).filter(e=>e.q);
+}
+
+function getScores(){
+  return {
+    security: +document.getElementById('s-security').value,
+    economy:  +document.getElementById('s-economy').value,
+    china:    +document.getElementById('s-china').value,
+    russia:   +document.getElementById('s-russia').value,
+    okinawa:  +document.getElementById('s-okinawa').value,
+    nuclear:  +document.getElementById('s-nuclear').value,
+    imperial: +document.getElementById('s-imperial').value,
+    surname:  +document.getElementById('s-surname').value,
+    gender:   +document.getElementById('s-gender').value,
+  };
+}
+
+function buildAddBody(){
+  const name  = document.getElementById('add-name').value.trim();
+  const en    = document.getElementById('add-en').value.trim();
+  const age   = document.getElementById('add-age').value;
+  const party = document.getElementById('add-party').value;
+  const house = document.getElementById('add-house').value;
+  const area  = document.getElementById('add-area').value.trim();
+  const x     = parseFloat(document.getElementById('add-x').value).toFixed(1);
+  const y     = parseFloat(document.getElementById('add-y').value).toFixed(1);
+  const s     = getScores();
+  const evs   = getEvRows();
+
+  const id = 'p_' + name;
+  const evJson = evs.map(e=>{
+    let obj = `{c:'${e.c}',q:'${e.q}',src:'${e.src}',d:'${e.d}'`;
+    if(e.url) obj += `,url:'${e.url}'`;
+    obj += '}';
+    return obj;
+  }).join(',');
+
+  const dataLine = `  {id:'${id}',name:'${name}',en:'${en}',age:${age||0},party:'${party}',house:'${house}',area:'${area}',x:${x},y:${y},s:{security:${s.security},economy:${s.economy},china:${s.china},russia:${s.russia},okinawa:${s.okinawa},nuclear:${s.nuclear},imperial:${s.imperial},surname:${s.surname},gender:${s.gender}},ev:[${evJson}]},`;
+
+  return `## 新規政治家追加リクエスト
+
+### 基本情報
+- ID: \`${id}\`
+- 名前: ${name}
+- 英語名: ${en || '（なし）'}
+- 年齢: ${age}
+- 政党: ${party}
+- 院: ${house}
+- 選挙区: ${area || '（なし）'}
+
+### 座標
+- X（保守↔リベラル）: ${x}
+- Y（タカ↔ハト）: ${y}
+
+### 政策スコア
+\`\`\`
+security:${s.security}, economy:${s.economy}, china:${s.china}, russia:${s.russia}
+okinawa:${s.okinawa}, nuclear:${s.nuclear}, imperial:${s.imperial}, surname:${s.surname}, gender:${s.gender}
+\`\`\`
+
+### エビデンス（${evs.length}件）
+${evs.map((e,i)=>`**#${i+1} ${e.c}**\n> ${e.q}\n出典: ${e.src}（${e.d}）${e.url?'\nURL: '+e.url:''}`).join('\n\n')}
+
+---
+### データ行（自動処理用）
+\`\`\`json
+<!-- ADD_POLITICIAN
+${dataLine}
+-->
+\`\`\`
+
+<!-- AUTO_UPDATE -->`;
+}
+
+function updatePreview(){
+  const el = document.getElementById('add-preview');
+  if(!el) return;
+  try{
+    el.textContent = buildAddBody();
+  }catch(e){
+    el.textContent = '（入力中…）';
+  }
+}
+
+// 入力変更でプレビュー更新
+document.addEventListener('input', e=>{
+  if(e.target.closest('#panel-add')) updatePreview();
+});
+document.addEventListener('change', e=>{
+  if(e.target.closest('#panel-add')) updatePreview();
+});
+
+// ===== 政治家検索（ローカル） =====
+let politicianIndex = null;
+async function loadIndex(){
+  if(politicianIndex) return;
+  // index.htmlのDATA部分をfetchして名前リストを構築
+  try{
+    const res = await fetch('index.html');
+    const txt = await res.text();
+    const matches = [...txt.matchAll(/\{id:'(p_[^']+)',name:'([^']+)'/g)];
+    politicianIndex = matches.map(m=>({id:m[1],name:m[2]}));
+  }catch(e){
+    politicianIndex = [];
+  }
+}
+
+let evTarget = null, fixTarget = null;
+async function searchPolitician(q, mode){
+  await loadIndex();
+  const resId = mode+'-search-result';
+  const el = document.getElementById(resId);
+  if(!q.trim()){el.style.display='none';return;}
+  const results = (politicianIndex||[]).filter(p=>p.name.includes(q)).slice(0,8);
+  if(!results.length){el.innerHTML='<div style="font-size:11px;color:var(--muted);padding:6px">見つかりません</div>';el.style.display='block';return;}
+  el.innerHTML = results.map(p=>
+    `<div onclick="selectPolitician('${p.id}','${p.name}','${mode}')"
+      style="padding:8px 12px;cursor:pointer;font-size:12px;border:1px solid var(--border);margin-bottom:2px;background:var(--bg2);transition:background .1s"
+      onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background='var(--bg2)'"
+    >${p.name} <span style="font-size:10px;color:var(--muted)">${p.id}</span></div>`
+  ).join('');
+  el.style.display='block';
+}
+
+function selectPolitician(id, name, mode){
+  const bar = document.getElementById(mode+'-target-bar');
+  bar.textContent = '対象: ' + name + '（' + id + '）';
+  bar.style.display='block';
+  document.getElementById(mode+'-search-result').style.display='none';
+  document.getElementById(mode+'-search').value = name;
+  if(mode==='ev'){evTarget={id,name};document.getElementById('ev-form-section').style.display='block';document.getElementById('ev-btn-row').style.display='flex';}
+  if(mode==='fix'){fixTarget={id,name};document.getElementById('fix-form-section').style.display='block';document.getElementById('fix-btn-row').style.display='flex';}
+}
+
+// ===== GitHub Issue送信 =====
+async function postIssue(title, body, labels){
+  if(!CFG.token) throw new Error('GitHubトークンが設定されていません（設定タブで入力してください）');
+  const res = await fetch(
+    `https://api.github.com/repos/${CFG.owner}/${CFG.repo}/issues`,
+    {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Accept':'application/vnd.github.v3+json',
+        'Authorization':'Bearer '+CFG.token,
+      },
+      body: JSON.stringify({title, body, labels}),
+    }
+  );
+  if(!res.ok){
+    const err = await res.json().catch(()=>({message:res.statusText}));
+    throw new Error(err.message||'HTTP '+res.status);
+  }
+  return res.json();
+}
+
+function setStatus(id, type, msg){
+  const el = document.getElementById(id);
+  el.className = 'send-status ' + type;
+  el.innerHTML = type==='sending' ? `<span class="spinner"></span>${msg}` : msg;
+}
+
+// 追加送信
+async function submitAdd(){
+  const name = document.getElementById('add-name').value.trim();
+  const party = document.getElementById('add-party').value;
+  if(!name || !party){alert('名前と政党は必須です');return;}
+  const btn = document.getElementById('add-submit');
+  btn.disabled = true;
+  setStatus('add-status','sending','GitHubに送信中…');
+  try{
+    const body = buildAddBody();
+    const issue = await postIssue('[ADD] ' + name + '（' + party + '）', body, ['add-politician','pending-review']);
+    setStatus('add-status','done',`✅ Issue #${issue.number} を作成しました。GitHub Actionsが自動処理します。`);
+  }catch(e){
+    setStatus('add-status','error','❌ エラー: ' + e.message);
+    btn.disabled = false;
+  }
+}
+
+// エビデンス送信
+async function submitEv(){
+  if(!evTarget){alert('政治家を選択してください');return;}
+  const cat   = document.getElementById('ev-cat').value;
+  const quote = document.getElementById('ev-quote').value.trim();
+  const src   = document.getElementById('ev-src').value.trim();
+  const date  = document.getElementById('ev-date').value.trim() || '不明';
+  const url   = document.getElementById('ev-url').value.trim();
+  if(!quote||!src){alert('発言内容と出典は必須です');return;}
+  setStatus('ev-status','sending','送信中…');
+  try{
+    const body = `## エビデンス追加リクエスト
+
+- 対象ID: \`${evTarget.id}\`
+- 名前: ${evTarget.name}
+- カテゴリ: ${cat}
+- 発言: ${quote}
+- 出典: ${src}
+- 日付: ${date}
+${url?`- URL: ${url}`:''}
+
+\`\`\`json
+<!-- ADD_EVIDENCE
+{"id":"${evTarget.id}","ev":{"c":"${cat}","q":"${quote}","src":"${src}","d":"${date}"${url?`,"url":"${url}"`:''}}}
+-->
+\`\`\`
+
+<!-- AUTO_UPDATE -->`;
+    const issue = await postIssue('[EV] ' + evTarget.name + ' ' + cat, body, ['evidence','pending-review']);
+    setStatus('ev-status','done',`✅ Issue #${issue.number} を作成しました`);
+  }catch(e){
+    setStatus('ev-status','error','❌ ' + e.message);
+  }
+}
+
+// データ修正送信
+async function submitFix(){
+  if(!fixTarget){alert('政治家を選択してください');return;}
+  const field  = document.getElementById('fix-field').value;
+  const oldVal = document.getElementById('fix-old').value.trim();
+  const newVal = document.getElementById('fix-new').value.trim();
+  const reason = document.getElementById('fix-reason').value.trim();
+  if(!newVal||!reason){alert('正しい値と修正理由は必須です');return;}
+  setStatus('fix-status','sending','送信中…');
+  try{
+    const body = `## データ修正リクエスト
+
+- 対象ID: \`${fixTarget.id}\`
+- 名前: ${fixTarget.name}
+- 修正項目: ${field}
+- 現在の値: ${oldVal||'（不明）'}
+- 正しい値: ${newVal}
+- 根拠: ${reason}
+
+\`\`\`json
+<!-- FIX_DATA
+{"id":"${fixTarget.id}","field":"${field}","value":"${newVal}"}
+-->
+\`\`\`
+
+<!-- AUTO_UPDATE -->`;
+    const issue = await postIssue('[FIX] ' + fixTarget.name + ' ' + field, body, ['data-fix','pending-review']);
+    setStatus('fix-status','done',`✅ Issue #${issue.number} を作成しました`);
+  }catch(e){
+    setStatus('fix-status','error','❌ ' + e.message);
+  }
+}
+
+function resetForm(){
+  document.getElementById('add-name').value='';
+  document.getElementById('add-en').value='';
+  document.getElementById('add-age').value='';
+  document.getElementById('add-party').value='';
+  document.getElementById('add-x').value=0;
+  document.getElementById('add-y').value=0;
+  document.getElementById('add-x-v').textContent='0.0';
+  document.getElementById('add-y-v').textContent='0.0';
+  document.querySelectorAll('[id^="s-"]').forEach(el=>{el.value=5;el.nextElementSibling.textContent=5;});
+  document.getElementById('add-ev-list').innerHTML='';
+  evCount=0;
+  addEvRow();
+  updateDot();
+  document.getElementById('add-submit').disabled=false;
+  setStatus('add-status','','');
+}
+</script>
+</body>
+</html>
