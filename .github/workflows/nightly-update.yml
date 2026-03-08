@@ -34,11 +34,7 @@ jobs:
           GH_REPO: ${{ github.event.repository.name }}
         run: python scripts/nightly_update.py
 
-      - name: Issues投稿トークンをindex.htmlに埋め込み
-        env:
-          ISSUES_TOKEN: ${{ secrets.GH_ISSUES_TOKEN }}
-        run: |
-          sed -i "s|%%ISSUES_TOKEN%%|${ISSUES_TOKEN}|g" index.html
+     
 
       - name: 変更をコミット・プッシュ
         run: |
