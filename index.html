@@ -2314,7 +2314,88 @@ function openUserBF(compareId){
   openUserPanel(_upCmpId);
 }
 
-</script>
+/* ════ CANVAS EVENTS ════ */
+const cv = document.getElementById('cv');
+
+// ホバー → ツールチップ
+cv.addEventListener('mousemove', e => {
+  const rect = cv.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const hit = hits.find(h => Math.hypot(mx-h.cx, my-h.cy) <= h.r);
+  const tip = document.getElementById('tip');
+  if(hit){
+    const p = hit.p;
+    const col = pc(p.party);
+    document.getElementById('tip-name').textContent = p.name;
+    const tp = document.getElementById('tip-party');
+    tp.textContent = p.party;
+    tp.style.cssText = `background:${col}22;border:1px solid ${col}55;color:${col}`;
+    document.getElementById('tip-pos').textContent = `${xLabel(p.x)}  /  ${yLabel(p.y)}`;
+    const tx = Math.min(e.clientX + 12, window.innerWidth - 220);
+    const ty = Math.max(e.clientY - 80, 4);
+    tip.style.left = tx + 'px';
+    tip.style.top  = ty + 'px';
+    tip.classList.add('on');
+    cv.style.cursor = 'pointer';
+  } else {
+    tip.classList.remove('on');
+    cv.style.cursor = dragging ? 'grabbing' : 'default';
+  }
+});
+
+cv.addEventListener('mouseleave', () => {
+  document.getElementById('tip').classList.remove('on');
+});
+
+// クリック → ポップアップ
+cv.addEventListener('click', e => {
+  if(dragMoved) return;
+  const rect = cv.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const hit = hits.find(h => Math.hypot(mx-h.cx, my-h.cy) <= h.r);
+  if(hit){
+    hlId = hit.p.id;
+    draw();
+    openPop(hit.p, e);
+  } else {
+    if(popId){ clrP(); } else { hlId=null; draw(); }
+  }
+});
+
+// ホイール → ズーム
+cv.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect = cv.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const delta = e.deltaY > 0 ? 0.85 : 1.18;
+  const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom * delta));
+  panX = (panX + (mx - cv.width/2)/zoom) - (mx - cv.width/2)/newZoom;
+  panY = (panY + (my - cv.height/2)/zoom) - (my - cv.height/2)/newZoom;
+  zoom = newZoom;
+  draw();
+}, {passive:false});
+
+// ドラッグ → パン
+cv.addEventListener('mousedown', e => {
+  dragging=true; dragMoved=false;
+  dragStartX=e.clientX; dragStartY=e.clientY;
+  panStartX=panX; panStartY=panY;
+  cv.style.cursor='grabbing';
+});
+window.addEventListener('mousemove', e => {
+  if(!dragging) return;
+  const dx=e.clientX-dragStartX, dy=e.clientY-dragStartY;
+  if(Math.hypot(dx,dy)>3) dragMoved=true;
+  panX=panStartX+dx/zoom; panY=panStartY+dy/zoom;
+  draw();
+});
+window.addEventListener('mouseup', ()=>{ dragging=false; cv.style.cursor='default'; });
+
+// ダブルクリック → リセット
+cv.addEventListener('dblclick', ()=>{ zoom=1; panX=0; panY=0; draw(); });</script>
 
 <div id="quiz" style="display:none;position:fixed;inset:0;z-index:950;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:16px;">
   <div id="quiz-box" style="width:100%;max-width:500px;background:#141820;border:1px solid #2c3550;box-shadow:0 20px 60px rgba(0,0,0,.9);max-height:92vh;overflow-y:auto;position:relative;">
