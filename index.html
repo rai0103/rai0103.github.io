@@ -2320,8 +2320,10 @@ const cv = document.getElementById('cv');
 // ホバー → ツールチップ
 cv.addEventListener('mousemove', e => {
   const rect = cv.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
+  const scaleX = cv.width / rect.width;
+const scaleY = cv.height / rect.height;
+const mx = (e.clientX - rect.left) * scaleX;
+const my = (e.clientY - rect.top) * scaleY;
   const hit = hits.find(h => Math.hypot(mx-h.cx, my-h.cy) <= h.r);
   const tip = document.getElementById('tip');
   if(hit){
@@ -2352,8 +2354,10 @@ cv.addEventListener('mouseleave', () => {
 cv.addEventListener('click', e => {
   if(dragMoved) return;
   const rect = cv.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
+  const scaleX = cv.width / rect.width;
+const scaleY = cv.height / rect.height;
+const mx = (e.clientX - rect.left) * scaleX;
+const my = (e.clientY - rect.top) * scaleY;
   const hit = hits.find(h => Math.hypot(mx-h.cx, my-h.cy) <= h.r);
   if(hit){
     hlId = hit.p.id;
