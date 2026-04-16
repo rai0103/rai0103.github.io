@@ -191,6 +191,10 @@ body{display:flex;flex-direction:column;}
 .br-ev-item.party-ev{background:rgba(80,80,120,.15);border-radius:4px;padding:6px 8px;border-left:2px solid rgba(120,120,180,.4);}
 .br-ev-item.party-ev .br-ev-q{color:#aab0c8;}
 .br-ev-party-badge{font-size:9px;color:#7878aa;background:rgba(80,80,140,.25);border-radius:3px;padding:1px 5px;margin-bottom:3px;display:inline-block;}
+.br-ev-item.kokkai-ev{background:rgba(40,80,120,.15);border-radius:4px;padding:6px 8px;border-left:2px solid rgba(60,140,200,.4);}
+.br-ev-item.kokkai-ev .br-ev-q{color:#b8d0e8;}
+.br-ev-kokkai-badge{font-size:9px;color:#5aa0cc;background:rgba(40,100,160,.25);border-radius:3px;padding:1px 5px;margin-bottom:3px;display:inline-block;}
+.br-ev-extra{text-align:right;font-size:9px;color:#3a4560;margin-top:4px;}
 .br-click-hint{font-size:9px;color:#3a4560;text-align:center;margin:8px 0 0;letter-spacing:.05em;}
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-thumb{background:#2c3550;border-radius:2px;}
@@ -1743,6 +1747,16 @@ function setA(age,btn){
 }
 
 /* ════ BUTTERFLY ════ */
+function parseEvDate(d){
+  if(!d||d==='不明') return new Date(0);
+  if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(d);
+  const m2=d.match(/^(\d{4})年(\d{1,2})月/);
+  if(m2) return new Date(+m2[1],+m2[2]-1,1);
+  const m1=d.match(/^(\d{4})年/);
+  if(m1) return new Date(+m1[1],0,1);
+  return new Date(0);
+}
+
 function openBF(id){
   const p=DATA.find(x=>x.id===id); if(!p) return;
   const col=pc(p.party);
@@ -1755,7 +1769,7 @@ function openBF(id){
     const lbl=catLabel(cat.key,sc);
 
     // この項目に関連するエビデンスを抽出（カテゴリキーorラベルで照合）
-    const catEvs=(p.ev||[]).filter(ev=>{
+    const allCatEvs=(p.ev||[]).filter(ev=>{
       const c=(ev.c||'').toLowerCase();
       const k=cat.key.toLowerCase();
       const l=cat.label;
@@ -1770,12 +1784,18 @@ function openBF(id){
              (k==='surname' &&(c.includes('別姓')||c.includes('夫婦')))||
              (k==='gender'  &&(c.includes('ジェンダー')||c.includes('LGBT')||c.includes('女性')));
     });
+    // 発言日時でソートし最新3件のみ表示
+    const catEvs=allCatEvs.slice().sort((a,b)=>parseEvDate(b.d)-parseEvDate(a.d)).slice(0,3);
+    const extraCount=Math.max(0,allCatEvs.length-3);
 
     const evHTML=catEvs.length
       ? catEvs.map(ev=>ev.party
           ? `<div class="br-ev-item party-ev"><div class="br-ev-party-badge">🏛️ 個人見解未確認・所属政党の公式見解を表示</div><div class="br-ev-q">「${ev.q}」</div><div class="br-ev-src">📋 ${ev.src}（${ev.d}）</div></div>`
+          : ev.kokkai
+          ? `<div class="br-ev-item kokkai-ev"><div class="br-ev-kokkai-badge">🏛️ 国会発言（自動取得）</div><div class="br-ev-q">「${ev.q}」</div><div class="br-ev-src">📋 ${ev.src}（${ev.d}）</div></div>`
           : `<div class="br-ev-item"><div class="br-ev-q">「${ev.q}」</div><div class="br-ev-src">📌 ${ev.src}（${ev.d}）</div></div>`
         ).join('')
+        +(extraCount>0?`<div class="br-ev-extra">他${extraCount}件の発言あり（スコア計算に反映済み）</div>`:'')
       : `<div class="br-ev-empty">この項目のエビデンスはまだ登録されていません</div>`;
 
     return`<div class="br" onclick="togBrEv(this)" style="display:grid;grid-template-columns:100px 1fr 90px 1fr 16px;grid-template-rows:auto auto;">
