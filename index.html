@@ -273,6 +273,13 @@ body{display:flex;flex-direction:column;}
 .pp-issue-lbl{font-size:10px;color:#c9a84c;font-weight:700;letter-spacing:.06em;margin-bottom:8px;padding:2px 0;}
 .pp-submit-btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:10px;background:none;border:none;border-top:1px solid #1e2535;width:100%;cursor:pointer;font-size:11px;font-weight:700;color:#5a6a88;letter-spacing:.04em;transition:color .15s;}
 .pp-submit-btn:hover{color:#c9a84c;background:rgba(201,168,76,.04);}
+.pp-link{display:inline-flex;align-items:center;text-decoration:none;color:#5a6a88;margin-left:5px;vertical-align:middle;opacity:.65;transition:opacity .15s,color .15s;}
+.pp-link:hover{opacity:1;color:#c9a84c;}
+.pp-members{display:flex;padding:8px 14px;background:rgba(0,0,0,.2);border-top:1px solid #1e2535;}
+.pp-mem-item{flex:1;text-align:center;}
+.pp-mem-lbl{font-size:9px;color:#5a6a88;margin-bottom:2px;}
+.pp-mem-val{font-size:14px;font-weight:700;font-family:monospace;}
+.pp-mem-sep{width:1px;background:#1e2535;}
 #rpt-party{display:none;position:fixed;inset:0;z-index:800;align-items:center;justify-content:center;padding:16px;}
 #rpt-party.on{display:flex;}
 #rpt-party-bg{position:absolute;inset:0;background:rgba(0,0,0,.7);}
@@ -1741,7 +1748,11 @@ function openPop(p,e){
   }
   document.getElementById('pn').textContent=p.name;
   document.getElementById('pe').textContent=p.en;
-  const pg=document.getElementById('pg'); pg.textContent=p.party; pg.style.cssText=`background:${col}22;border:1px solid ${col}55;color:${col}`;
+  const pg=document.getElementById('pg');
+  const pData=PARTY_DATA.find(pd=>pd.fullName===p.party||pd.name===p.party);
+  const pLinkSvg=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+  pg.innerHTML=p.party+(pData?.url?`<a href="${pData.url}" target="_blank" rel="noopener" class="pp-link" title="公式HP">${pLinkSvg}</a>`:'');
+  pg.style.cssText=`background:${col}22;border:1px solid ${col}55;color:${col}`;
   const ageDisp = (p.age && p.age > 0) ? p.age+'歳' : '';
   const pdEl = document.getElementById('pd');
   if(p.age < 0){
@@ -2548,6 +2559,8 @@ const ISSUES = [
 const PARTY_DATA = [
   {
     id:'party_ldp', name:'自民党', fullName:'自由民主党',
+    url:'https://www.jimin.jp/',
+    members:{house:261,senate:113,total:374},
     x:7.0,
     pos:{defense:+8,spy:+8,surname:-5,imperial:-7,middleeast:+5,ukraine:+7,constitution:+8,nuclear:+8,tax:+5,immigration:-3,china:+7,pension:-3,okinawa:+7,history:+7,judicial:-6},
     summary:{
@@ -2566,6 +2579,8 @@ const PARTY_DATA = [
   },
   {
     id:'party_komeito', name:'公明党', fullName:'公明党',
+    url:'https://www.komei.or.jp/',
+    members:{house:24,senate:27,total:51},
     x:2.0,
     pos:{defense:+4,spy:+3,surname:+3,imperial:-2,middleeast:0,ukraine:+5,constitution:+3,nuclear:+3,tax:+4,immigration:+2,china:+1,pension:+4,okinawa:+4,history:0,judicial:-2},
     summary:{
@@ -2582,6 +2597,8 @@ const PARTY_DATA = [
   },
   {
     id:'party_rikken', name:'立憲民主党', fullName:'立憲民主党',
+    url:'https://cdp-japan.jp/',
+    members:{house:148,senate:39,total:187},
     x:-5.0,
     pos:{defense:-2,spy:-4,surname:+8,imperial:+4,middleeast:-3,ukraine:+4,constitution:-6,nuclear:-5,tax:-2,immigration:+3,china:+3,pension:+5,okinawa:-4,history:-4,judicial:+5},
     summary:{
@@ -2600,6 +2617,8 @@ const PARTY_DATA = [
   },
   {
     id:'party_ishin', name:'維新の会', fullName:'日本維新の会',
+    url:'https://o-ishin.jp/',
+    members:{house:38,senate:21,total:59},
     x:1.0,
     pos:{defense:+5,spy:+5,surname:+8,imperial:+2,middleeast:+3,ukraine:+6,constitution:+6,nuclear:+4,tax:-1,immigration:+1,china:+6,pension:-4,okinawa:+3,history:+1,judicial:+4},
     summary:{
@@ -2618,6 +2637,8 @@ const PARTY_DATA = [
   },
   {
     id:'party_dpfp', name:'国民民主党', fullName:'国民民主党',
+    url:'https://new-kokumin.jp/',
+    members:{house:28,senate:20,total:48},
     x:-1.0,
     pos:{defense:+4,spy:+3,surname:+6,imperial:+1,middleeast:+2,ukraine:+5,constitution:+3,nuclear:+5,tax:-5,immigration:-2,china:+5,pension:+2,okinawa:+2,history:0,judicial:+2},
     summary:{
@@ -2636,6 +2657,8 @@ const PARTY_DATA = [
   },
   {
     id:'party_jcp', name:'日本共産党', fullName:'日本共産党',
+    url:'https://www.jcp.or.jp/',
+    members:{house:8,senate:11,total:19},
     x:-9.0,
     pos:{defense:-9,spy:-8,surname:+8,imperial:+7,middleeast:-7,ukraine:-5,constitution:-9,nuclear:-8,tax:-8,immigration:+5,china:-4,pension:+8,okinawa:-8,history:-7,judicial:+7},
     summary:{
@@ -2654,6 +2677,8 @@ const PARTY_DATA = [
   },
   {
     id:'party_reiwa', name:'れいわ新選組', fullName:'れいわ新選組',
+    url:'https://reiwa-shinsengumi.com/',
+    members:{house:9,senate:5,total:14},
     x:-8.0,
     pos:{defense:-7,spy:-7,surname:+9,imperial:+6,middleeast:-8,ukraine:-6,constitution:-8,nuclear:-9,tax:-9,immigration:+6,china:-2,pension:+9,okinawa:-7,history:-4,judicial:+7},
     summary:{
@@ -2671,6 +2696,8 @@ const PARTY_DATA = [
   },
   {
     id:'party_sdp', name:'社民党', fullName:'社会民主党',
+    url:'https://sdp.or.jp/',
+    members:{house:1,senate:1,total:2},
     x:-8.0,
     pos:{defense:-9,spy:-8,surname:+9,imperial:+7,middleeast:-8,ukraine:-4,constitution:-9,nuclear:-8,tax:-5,immigration:+6,china:-3,pension:+7,okinawa:-8,history:-6,judicial:+6},
     summary:{
@@ -2687,6 +2714,8 @@ const PARTY_DATA = [
   },
   {
     id:'party_sansei', name:'参政党', fullName:'参政党',
+    url:'https://www.sanseito.jp/',
+    members:{house:3,senate:3,total:6},
     x:8.0,
     pos:{defense:+7,spy:+9,surname:-8,imperial:-9,middleeast:+4,ukraine:+3,constitution:+8,nuclear:+6,tax:-4,immigration:-9,china:+8,pension:+3,okinawa:+6,history:+8,judicial:-3},
     summary:{
@@ -2704,6 +2733,8 @@ const PARTY_DATA = [
   },
   {
     id:'party_hoshuto', name:'日本保守党', fullName:'日本保守党',
+    url:'https://hoshuto.jp/',
+    members:{house:3,senate:1,total:4},
     x:9.0,
     pos:{defense:+9,spy:+9,surname:-9,imperial:-9,middleeast:+6,ukraine:+7,constitution:+9,nuclear:+7,tax:-3,immigration:-9,china:+9,pension:0,okinawa:+8,history:+9,judicial:-5},
     summary:{
@@ -2843,8 +2874,9 @@ function drawPartyMap(){
     const px2=tx2(party.x), py2=ty2(yv);
     const col=pc(party.fullName)||'#888';
     const hl=(party.id===partyHlId);
-    const r=hl?18:14;
-    const alpha=hl?1:(partyHlId?0.5:0.9);
+    const baseR=7+((party.members?.total||0)/374)*15;
+    const r=hl?baseR+4:baseR;
+    const alpha=hl?1:(partyHlId?0.4:0.75);
 
     partyHits.push({party,cx:px2,cy:py2,r:r+10});
 
@@ -2886,11 +2918,21 @@ function openPartyPop(party){
   const issue=ISSUES.find(i=>i.key===issueKey)||ISSUES[0];
   const yv=party.pos[issueKey]??0;
 
+  const linkSvg=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
   document.getElementById('pp-bar').style.background=`linear-gradient(90deg,${col},transparent)`;
-  document.getElementById('pp-name').textContent=party.name;
+  const nameEl=document.getElementById('pp-name');
+  nameEl.innerHTML=party.name+(party.url?`<a href="${party.url}" target="_blank" rel="noopener" class="pp-link" title="公式HP">${linkSvg}</a>`:'');
   const badge=document.getElementById('pp-badge');
   badge.textContent=party.fullName;
   badge.style.cssText=`background:${col}22;border:1px solid ${col}55;color:${col}`;
+
+  const m=party.members||{};
+  const mhEl=document.getElementById('pp-mem-house');
+  const msEl=document.getElementById('pp-mem-senate');
+  const mtEl=document.getElementById('pp-mem-total');
+  if(mhEl) mhEl.textContent=m.house??'—';
+  if(msEl) msEl.textContent=m.senate??'—';
+  if(mtEl){mtEl.textContent=m.total??'—';mtEl.style.color=col;}
 
   const issueLblEl=document.getElementById('pp-issue-lbl');
   if(issueLblEl) issueLblEl.textContent='選択中のイシュー：'+issue.label;
@@ -3060,6 +3102,22 @@ async function postPartyToGitHubIssue(issueKey,speaker,quote,srcType,url){
       <div class="pp-issue-lbl" id="pp-issue-lbl"></div>
       <div class="pp-summary-lbl">AI 要約</div>
       <div class="pp-summary" id="pp-summary"></div>
+    </div>
+    <div class="pp-members">
+      <div class="pp-mem-item">
+        <div class="pp-mem-lbl">衆議院</div>
+        <div class="pp-mem-val" id="pp-mem-house"></div>
+      </div>
+      <div class="pp-mem-sep"></div>
+      <div class="pp-mem-item">
+        <div class="pp-mem-lbl">参議院</div>
+        <div class="pp-mem-val" id="pp-mem-senate"></div>
+      </div>
+      <div class="pp-mem-sep"></div>
+      <div class="pp-mem-item">
+        <div class="pp-mem-lbl">合計</div>
+        <div class="pp-mem-val" id="pp-mem-total"></div>
+      </div>
     </div>
     <div class="pp-axes">
       <div class="pp-axis">
