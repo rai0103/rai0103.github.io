@@ -245,7 +245,9 @@ body{display:flex;flex-direction:column;}
 /* ═══ 政党マップ ═══ */
 #issue-row{flex:0 0 auto;display:none;align-items:center;gap:8px;padding:4px 12px 6px;}
 #issue-row.on{display:flex;}
-#issue-sel{background:#0e1118;border:1px solid #2c3550;color:#dce4f0;font-size:12px;padding:6px 10px;outline:none;appearance:none;-webkit-appearance:none;cursor:pointer;flex:1;max-width:320px;}
+#issue-sel-wrap{position:relative;flex:1;max-width:320px;}
+#issue-sel-wrap::after{content:'▼';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:#5a6a88;pointer-events:none;}
+#issue-sel{background:#0e1118;border:1px solid #2c3550;color:#dce4f0;font-size:12px;padding:6px 26px 6px 10px;outline:none;appearance:none;-webkit-appearance:none;cursor:pointer;width:100%;}
 #issue-sel:focus{border-color:#c9a84c;}
 #party-pop{display:none;position:fixed;top:60px;right:14px;z-index:600;width:100%;max-width:340px;}
 #party-pop.on{display:block;}
@@ -268,6 +270,12 @@ body{display:flex;flex-direction:column;}
 .pp-ev-src{font-size:9px;color:#5a6a88;margin-top:3px;}
 .pp-xb{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.5);border:none;color:#888;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .pp-xb:hover{color:#fff;}
+.pp-issue-lbl{font-size:10px;color:#c9a84c;font-weight:700;letter-spacing:.06em;margin-bottom:8px;padding:2px 0;}
+.pp-submit-btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:10px;background:none;border:none;border-top:1px solid #1e2535;width:100%;cursor:pointer;font-size:11px;font-weight:700;color:#5a6a88;letter-spacing:.04em;transition:color .15s;}
+.pp-submit-btn:hover{color:#c9a84c;background:rgba(201,168,76,.04);}
+#rpt-party{display:none;position:fixed;inset:0;z-index:800;align-items:center;justify-content:center;padding:16px;}
+#rpt-party.on{display:flex;}
+#rpt-party-bg{position:absolute;inset:0;background:rgba(0,0,0,.7);}
 </style>
 </head>
 <body>
@@ -329,6 +337,7 @@ body{display:flex;flex-direction:column;}
 </div>
 <div id="issue-row">
   <span class="tl" style="white-space:nowrap">イシュー:</span>
+  <div id="issue-sel-wrap">
   <select id="issue-sel" onchange="onIssueChange()">
     <option value="defense">自衛隊・防衛予算（増強 ↔ 縮小）</option>
     <option value="spy">スパイ防止法（制定賛成 ↔ 反対）</option>
@@ -346,6 +355,7 @@ body{display:flex;flex-direction:column;}
     <option value="history">歴史認識・靖国参拝（参拝推進 ↔ 参拝反対）</option>
     <option value="judicial">冤罪・司法制度改革（改革推進 ↔ 現状維持）</option>
   </select>
+  </div>
 </div>
 <div id="fa">
   <span class="fl">絞込:</span>
@@ -2518,21 +2528,21 @@ let partyHlId = null;
 let partyHits = [];
 
 const ISSUES = [
-  {key:'defense',     label:'自衛隊・防衛予算',     yPos:'増強',          yNeg:'縮小'},
-  {key:'spy',         label:'スパイ防止法',          yPos:'制定賛成',      yNeg:'反対'},
-  {key:'surname',     label:'夫婦別姓',              yPos:'選択的賛成',    yNeg:'反対'},
-  {key:'imperial',    label:'皇室制度（女系天皇）',  yPos:'女系容認',      yNeg:'男系維持'},
-  {key:'middleeast',  label:'イラン・中東情勢',      yPos:'強硬',          yNeg:'融和'},
-  {key:'ukraine',     label:'ロシアのウクライナ侵攻',yPos:'強硬支援',      yNeg:'外交解決'},
-  {key:'constitution',label:'憲法改正（9条）',       yPos:'改憲推進',      yNeg:'護憲'},
-  {key:'nuclear',     label:'原発・エネルギー政策',  yPos:'推進',          yNeg:'脱原発'},
-  {key:'tax',         label:'消費税',                yPos:'増税',          yNeg:'減税・廃止'},
-  {key:'immigration', label:'移民・外国人政策',      yPos:'受入推進',      yNeg:'制限・慎重'},
-  {key:'china',       label:'対中政策',              yPos:'強硬',          yNeg:'融和'},
-  {key:'pension',     label:'年金・社会保障',        yPos:'拡充',          yNeg:'縮小・改革'},
-  {key:'okinawa',     label:'沖縄基地問題',          yPos:'現状維持・強化',yNeg:'縮小・撤去'},
-  {key:'history',     label:'歴史認識・靖国参拝',    yPos:'参拝推進',      yNeg:'参拝反対'},
-  {key:'judicial',    label:'冤罪・司法制度改革',    yPos:'改革推進',      yNeg:'現状維持'},
+  {key:'defense',     label:'自衛隊・防衛予算',     yPos:'増強',          yNeg:'縮小',          xPos:'防衛強化派',    xNeg:'平和主義派'},
+  {key:'spy',         label:'スパイ防止法',          yPos:'制定賛成',      yNeg:'反対',          xPos:'安保重視派',    xNeg:'人権重視派'},
+  {key:'surname',     label:'夫婦別姓',              yPos:'選択的賛成',    yNeg:'反対',          xPos:'伝統家族派',    xNeg:'個人尊重派'},
+  {key:'imperial',    label:'皇室制度（女系天皇）',  yPos:'女系容認',      yNeg:'男系維持',      xPos:'伝統保守派',    xNeg:'リベラル派'},
+  {key:'middleeast',  label:'イラン・中東情勢',      yPos:'強硬',          yNeg:'融和',          xPos:'強硬外交派',    xNeg:'対話外交派'},
+  {key:'ukraine',     label:'ロシアのウクライナ侵攻',yPos:'強硬支援',      yNeg:'外交解決',      xPos:'対露強硬派',    xNeg:'外交解決派'},
+  {key:'constitution',label:'憲法改正（9条）',       yPos:'改憲推進',      yNeg:'護憲',          xPos:'改憲派',        xNeg:'護憲派'},
+  {key:'nuclear',     label:'原発・エネルギー政策',  yPos:'推進',          yNeg:'脱原発',        xPos:'原発推進派',    xNeg:'脱原発派'},
+  {key:'tax',         label:'消費税',                yPos:'増税',          yNeg:'減税・廃止',    xPos:'財政再建派',    xNeg:'消費税廃止派'},
+  {key:'immigration', label:'移民・外国人政策',      yPos:'受入推進',      yNeg:'制限・慎重',    xPos:'入管厳格派',    xNeg:'多文化共生派'},
+  {key:'china',       label:'対中政策',              yPos:'強硬',          yNeg:'融和',          xPos:'対中強硬派',    xNeg:'対中融和派'},
+  {key:'pension',     label:'年金・社会保障',        yPos:'拡充',          yNeg:'縮小・改革',    xPos:'財政改革派',    xNeg:'社会保障拡充派'},
+  {key:'okinawa',     label:'沖縄基地問題',          yPos:'現状維持・強化',yNeg:'縮小・撤去',    xPos:'日米同盟重視派',xNeg:'基地撤去派'},
+  {key:'history',     label:'歴史認識・靖国参拝',    yPos:'参拝推進',      yNeg:'参拝反対',      xPos:'保守歴史観派',  xNeg:'国際協調派'},
+  {key:'judicial',    label:'冤罪・司法制度改革',    yPos:'改革推進',      yNeg:'現状維持',      xPos:'現行制度派',    xNeg:'司法改革派'},
 ];
 
 const PARTY_DATA = [
@@ -2540,110 +2550,174 @@ const PARTY_DATA = [
     id:'party_ldp', name:'自民党', fullName:'自由民主党',
     x:7.0,
     pos:{defense:+8,spy:+8,surname:-5,imperial:-7,middleeast:+5,ukraine:+7,constitution:+8,nuclear:+8,tax:+5,immigration:-3,china:+7,pension:-3,okinawa:+7,history:+7,judicial:-6},
-    summary:'防衛費のGDP比2%増額（5年間で43兆円）を決定・実施中。既設原発の最大限活用と次世代革新炉建設を推進。選択的夫婦別姓・女系天皇には党内反対多数。消費税率の維持を堅持。スパイ防止法の制定に積極的。具体的数値：防衛費43兆円・2027年度GDP比2%達成を目標。',
+    summary:{
+      default:'防衛費のGDP比2%増額（5年間で43兆円）を決定・実施中。既設原発の最大限活用と次世代革新炉建設を推進。選択的夫婦別姓・女系天皇には党内反対多数。消費税率の維持を堅持。スパイ防止法の制定に積極的。',
+      constitution:'「自衛隊を憲法に明記する」改憲を党是とし、96条改正（発議要件緩和）や緊急事態条項の新設も議論。参院選で改憲勢力3分の2維持を目標とする。',
+      defense:'2022年12月の国家安全保障戦略改訂で防衛費を5年間で43兆円・2027年度GDP比2%へ増額決定。敵基地攻撃能力（反撃能力）の保有を認め、トマホーク取得等を推進中。',
+      nuclear:'原発を重要ベースロード電源と位置付け、既設炉の最大限活用と次世代革新炉建設を推進。GX実行会議（2023年2月）で運転期間延長・新増設の方針を決定。',
+      tax:'2019年の消費税10%引上げを断行。社会保障財源として消費税率の維持・安定を堅持。「異次元の少子化対策」財源として社会保険料活用の議論を主導。',
+      surname:'選択的夫婦別姓に党内反対派が多く、法制審答申から30年以上が経過しても実現できていない。2024年党内提言でも「現行制度維持」を主張する意見が根強い。',
+    },
     ev:[
-      {q:'2027年度に防衛費をGDP比2%に増額することを決定。5年間で43兆円を確保する',src:'岸田首相・国家安全保障戦略改訂発表',d:'2022年12月'},
-      {q:'既設の原発を最大限活用し、次世代革新炉の建設を推進する',src:'GX実行会議決定',d:'2023年2月'},
-      {q:'自衛隊を憲法に明記することは党是であり、改憲を次の参院選の争点に据える',src:'自民党大会',d:'2024年3月'},
+      {q:'2027年度に防衛費をGDP比2%に増額することを決定。5年間で43兆円を確保する',src:'岸田首相・国家安全保障戦略改訂発表',d:'2022年12月',issue:'defense'},
+      {q:'既設の原発を最大限活用し、次世代革新炉の建設を推進する',src:'GX実行会議決定',d:'2023年2月',issue:'nuclear'},
+      {q:'自衛隊を憲法に明記することは党是であり、改憲を次の参院選の争点に据える',src:'自民党大会',d:'2024年3月',issue:'constitution'},
     ]
   },
   {
     id:'party_komeito', name:'公明党', fullName:'公明党',
     x:2.0,
     pos:{defense:+4,spy:+3,surname:+3,imperial:-2,middleeast:0,ukraine:+5,constitution:+3,nuclear:+3,tax:+4,immigration:+2,china:+1,pension:+4,okinawa:+4,history:0,judicial:-2},
-    summary:'加憲（現行条文維持）の立場で9条改正に慎重。全世代型社会保障改革を推進し、子育て・介護の充実と財政健全化を両立する方針。外国人材の受入れ拡大と共生社会の実現を支持。防衛費増額は一定容認も財源論に慎重。',
+    summary:{
+      default:'加憲（現行条文維持）の立場で9条改正に慎重。全世代型社会保障改革を推進し、子育て・介護の充実と財政健全化を両立する方針。外国人材の受入れ拡大と共生社会の実現を支持。防衛費増額は一定容認も財源論に慎重。',
+      constitution:'「加憲」の立場で憲法9条の内容は維持しつつ、環境権等の新条文追加を検討。自民の急進的な9条改正には慎重で、「平和主義を守りながら丁寧に議論」を堅持。',
+      defense:'防衛費増額は一定程度容認するが、財源の在り方に慎重。公明として「専守防衛」の堅持と外交による紛争防止を重視し、際限ない軍拡には歯止めをかける立場。',
+      pension:'全世代型社会保障改革を推進し、子育て支援・介護の充実と財政健全化の両立を方針として掲げる。児童手当の拡充（高校生まで延長）等を与党内で主導。',
+    },
     ev:[
-      {q:'加憲の立場で、憲法9条改正には慎重だ。平和主義を守りながら改憲を議論する',src:'山口那津男代表・党大会発言',d:'2023年'},
-      {q:'全世代型社会保障改革を進め、子育て・介護の充実と財政健全化を両立する',src:'公明党マニフェスト',d:'2024年'},
-      {q:'外国人材の受入れ拡大と共生社会の実現を推進する',src:'公明党政策集',d:'2024年'},
+      {q:'加憲の立場で、憲法9条改正には慎重だ。平和主義を守りながら改憲を議論する',src:'山口那津男代表・党大会発言',d:'2023年',issue:'constitution'},
+      {q:'全世代型社会保障改革を進め、子育て・介護の充実と財政健全化を両立する',src:'公明党マニフェスト',d:'2024年',issue:'pension'},
+      {q:'外国人材の受入れ拡大と共生社会の実現を推進する',src:'公明党政策集',d:'2024年',issue:'immigration'},
     ]
   },
   {
     id:'party_rikken', name:'立憲民主党', fullName:'立憲民主党',
     x:-5.0,
     pos:{defense:-2,spy:-4,surname:+8,imperial:+4,middleeast:-3,ukraine:+4,constitution:-6,nuclear:-5,tax:-2,immigration:+3,china:+3,pension:+5,okinawa:-4,history:-4,judicial:+5},
-    summary:'防衛費倍増に反対（財源・プロセスの問題を指摘）。2030年代原発ゼロを目標。選択的夫婦別姓の今国会実現を主張。消費税の時限的引下げ（5%案）を提案。憲法9条の維持を堅持。具体的主張：防衛費はGDP比1%維持・時限的消費税5%減税。',
+    summary:{
+      default:'防衛費倍増に反対（財源・プロセスの問題を指摘）。2030年代原発ゼロを目標。選択的夫婦別姓の今国会実現を主張。消費税の時限的引下げ（5%案）を提案。憲法9条の維持を堅持。',
+      constitution:'憲法9条の維持・護憲を堅持。防衛費増額や集団的自衛権行使への反対を継続。改憲論議には「丁寧な議論を」と慎重姿勢を取りながら、自民の性急な改憲には反対。',
+      defense:'防衛費のGDP比2%増額に反対し、GDP比1%水準の維持を主張。財源と政策決定プロセスの不透明さを批判。ただし一部議員は抑止力強化の必要性を認め、党内に温度差がある。',
+      nuclear:'2030年代原発ゼロを目標として掲げ、再生可能エネルギー中心のエネルギー政策への転換を主張。原発新増設には反対し、既存炉の早期廃炉を求める。',
+      tax:'時限的消費税5%への引下げを提案（2024年衆院選公約）。恒久的減税ではなく経済対策としての時限措置。中長期的には消費税率の在り方を議論する姿勢。',
+      surname:'選択的夫婦別姓の今国会での実現を最重要課題の一つに掲げる。泉代表が「30年来の宿題」と位置付け、法案提出を繰り返し実現を迫っている。',
+    },
     ev:[
-      {q:'選択的夫婦別姓は30年来の宿題。今国会で必ず実現する',src:'泉健太代表・国会会見',d:'2024年'},
-      {q:'防衛費倍増は必要性と財源について国民的議論なき性急な決定であり容認できない',src:'衆議院予算委員会',d:'2023年'},
-      {q:'2030年代に原発ゼロを実現し、再生可能エネルギー中心の社会を作る',src:'立憲民主党エネルギー政策',d:'2024年'},
+      {q:'選択的夫婦別姓は30年来の宿題。今国会で必ず実現する',src:'泉健太代表・国会会見',d:'2024年',issue:'surname'},
+      {q:'防衛費倍増は必要性と財源について国民的議論なき性急な決定であり容認できない',src:'衆議院予算委員会',d:'2023年',issue:'defense'},
+      {q:'2030年代に原発ゼロを実現し、再生可能エネルギー中心の社会を作る',src:'立憲民主党エネルギー政策',d:'2024年',issue:'nuclear'},
     ]
   },
   {
     id:'party_ishin', name:'維新の会', fullName:'日本維新の会',
     x:1.0,
     pos:{defense:+5,spy:+5,surname:+8,imperial:+2,middleeast:+3,ukraine:+6,constitution:+6,nuclear:+4,tax:-1,immigration:+1,china:+6,pension:-4,okinawa:+3,history:+1,judicial:+4},
-    summary:'憲法改正を積極推進（自衛隊明記・教育無償化を優先）。選択的夫婦別姓の早期実現を強く主張。身を切る改革で社会保障の持続可能性向上を目指す。教育無償化は大阪で先行実施中（高校・大学）。スパイ防止法の制定を支持。',
+    summary:{
+      default:'憲法改正を積極推進（自衛隊明記・教育無償化を優先）。選択的夫婦別姓の早期実現を強く主張。身を切る改革で社会保障の持続可能性向上を目指す。教育無償化は大阪で先行実施中（高校・大学）。スパイ防止法の制定を支持。',
+      constitution:'憲法改正を積極推進。自衛隊明記・教育無償化・統治機構改革を優先課題として提示。2024年には自民と改憲4項目での連携も模索。国民投票実現に最も積極的な野党。',
+      defense:'防衛費増額を容認しつつも、財源の透明性と使途の合理化を求める。「身を切る改革」で行政効率化との組み合わせを主張。GDP比2%目標には概ね容認の立場。',
+      nuclear:'エネルギー政策では現実路線。安全確認を前提とした原発の活用を容認。脱原発を急ぐよりエネルギー安保と経済性を重視し、大阪府・市の実績として再エネ拡大も推進。',
+      tax:'消費税の逆進性問題を指摘しながらも、単純な税率引下げより税制の抜本改革を主張。教育無償化財源として「身を切る改革」と行政の無駄削減を重視。',
+      surname:'選択的夫婦別姓の早期実現を強く主張。「個人の自由の問題」として推進派の急先鋒。2024年に立憲と共同法案を提出するなど実現に向け積極行動。',
+    },
     ev:[
-      {q:'憲法改正を実現するための積極的な推進政党だ。自衛隊明記と教育無償化を優先させる',src:'維新党大会',d:'2024年'},
-      {q:'選択的夫婦別姓の早期実現を強く求める。個人の自由の問題だ',src:'国会答弁（藤田文武幹事長）',d:'2024年'},
-      {q:'身を切る改革で政治・行政の無駄を省き、社会保障の持続可能性を高める',src:'日本維新の会マニフェスト',d:'2024年'},
+      {q:'憲法改正を実現するための積極的な推進政党だ。自衛隊明記と教育無償化を優先させる',src:'維新党大会',d:'2024年',issue:'constitution'},
+      {q:'選択的夫婦別姓の早期実現を強く求める。個人の自由の問題だ',src:'国会答弁（藤田文武幹事長）',d:'2024年',issue:'surname'},
+      {q:'身を切る改革で政治・行政の無駄を省き、社会保障の持続可能性を高める',src:'日本維新の会マニフェスト',d:'2024年',issue:'pension'},
     ]
   },
   {
     id:'party_dpfp', name:'国民民主党', fullName:'国民民主党',
     x:-1.0,
     pos:{defense:+4,spy:+3,surname:+6,imperial:+1,middleeast:+2,ukraine:+5,constitution:+3,nuclear:+5,tax:-5,immigration:-2,china:+5,pension:+2,okinawa:+2,history:0,judicial:+2},
-    summary:'「103万円の壁」を178万円に引上げを要求・与党と合意（2024年衆院選の主要公約）。手取り増加策として所得税減税を推進。原発活用とエネルギー安保の両立を主張。防衛費増額は財源を国民に説明の上で判断。具体的数値：基礎控除178万円へ引上げ合意。',
+    summary:{
+      default:'「103万円の壁」を178万円に引上げを要求・与党と合意（2024年衆院選の主要公約）。手取り増加策として所得税減税を推進。原発活用とエネルギー安保の両立を主張。防衛費増額は財源を国民に説明の上で判断。',
+      constitution:'憲法改正に前向き。緊急事態条項の新設や議員任期延長を優先課題として議論を主導。9条改正には慎重な議員も多く、党内でのコンセンサス形成中。',
+      defense:'現実的な安全保障政策を追求。防衛費増額は財源・効果を国民に説明した上で判断する立場。抑止力強化の必要性は認めるが、自民の急速な防衛費倍増には財源論から慎重。',
+      nuclear:'エネルギー安全保障と脱炭素の両立のため、安全が確認された原発の活用を支持。「脱炭素・経済成長・エネルギー安保」の三つを同時達成する現実的路線を推進。',
+      tax:'「103万円の壁」を178万円に引上げる基礎控除拡大（2024年与党合意）が最大の成果。手取り増加・内需拡大を重視し、消費税については時限的減税を提案。',
+      surname:'選択的夫婦別姓の実現を支持する議員が多い。2024年衆院選でも前向きな姿勢を示し、与党との協議でも選択肢を提示している。',
+    },
     ev:[
-      {q:'103万円の壁を178万円に引き上げる。手取りを増やし内需を拡大する',src:'玉木雄一郎代表・2024年衆院選公約発表',d:'2024年'},
-      {q:'エネルギー安全保障と脱炭素の両立のため、安全が確認された原発を活用する',src:'国民民主党エネルギー政策',d:'2024年'},
-      {q:'現実的な安全保障政策を追求する。防衛費の増額は国民に説明した上で判断する',src:'国民民主党安保政策',d:'2024年'},
+      {q:'103万円の壁を178万円に引き上げる。手取りを増やし内需を拡大する',src:'玉木雄一郎代表・2024年衆院選公約発表',d:'2024年',issue:'tax'},
+      {q:'エネルギー安全保障と脱炭素の両立のため、安全が確認された原発を活用する',src:'国民民主党エネルギー政策',d:'2024年',issue:'nuclear'},
+      {q:'現実的な安全保障政策を追求する。防衛費の増額は国民に説明した上で判断する',src:'国民民主党安保政策',d:'2024年',issue:'defense'},
     ]
   },
   {
     id:'party_jcp', name:'日本共産党', fullName:'日本共産党',
     x:-9.0,
     pos:{defense:-9,spy:-8,surname:+8,imperial:+7,middleeast:-7,ukraine:-5,constitution:-9,nuclear:-8,tax:-8,immigration:+5,china:-4,pension:+8,okinawa:-8,history:-7,judicial:+7},
-    summary:'軍事費2倍化に断固反対（GDP比2%増額を「憲法違反の大軍拡」と批判）。消費税の廃止を主張（段階的5%→廃止の工程表あり）。2030年代原発ゼロを要求。在日米軍基地の段階的撤去を主張。スパイ防止法制定に反対。具体的数値：防衛費はGDP比1%以下維持・消費税廃止。',
+    summary:{
+      default:'軍事費2倍化に断固反対（GDP比2%増額を「憲法違反の大軍拡」と批判）。消費税の廃止を主張（段階的5%→廃止の工程表あり）。2030年代原発ゼロを要求。在日米軍基地の段階的撤去を主張。スパイ防止法制定に反対。',
+      constitution:'憲法9条の完全護持を最重要課題とし、集団的自衛権行使や安保法制を「憲法違反」と断定。改憲そのものに反対し、9条を変えずに平和外交を推進する立場。',
+      defense:'軍事費2倍化を「憲法違反の大軍拡」と批判し、GDP比1%以下への抑制を主張。敵基地攻撃能力の保有・トマホーク取得に断固反対。外交・対話による平和構築を訴える。',
+      nuclear:'2030年代原発ゼロを要求し、全原発の早期廃炉を主張。原発推進のGX政策を「国民の命より財界の利益を優先」として強く批判。再生可能エネルギー100%移行を掲げる。',
+      tax:'消費税の即時5%引下げ、段階的廃止を主張（具体的工程表あり）。「消費税は社会保障財源に使われていない」と主張し、大企業・富裕層への課税強化で代替財源を確保する方針。',
+      surname:'選択的夫婦別姓の即時実現を要求。30年以上法案が通らない原因は自民党の妨害だと批判。ジェンダー平等政策の一環として位置付け、議員全員が賛成の立場。',
+    },
     ev:[
-      {q:'軍事費2倍化は憲法違反の大軍拡だ。国民の暮らしを犠牲にした軍備増強に断固反対する',src:'志位和夫委員長・衆議院予算委員会',d:'2023年'},
-      {q:'消費税は廃止する。まず5%への緊急減税を実施した上で廃止に向かう',src:'日本共産党政策',d:'2024年'},
-      {q:'原発はゼロにする。2030年代までに全原発を廃炉にする計画を示す',src:'日本共産党エネルギー政策',d:'2024年'},
+      {q:'軍事費2倍化は憲法違反の大軍拡だ。国民の暮らしを犠牲にした軍備増強に断固反対する',src:'志位和夫委員長・衆議院予算委員会',d:'2023年',issue:'defense'},
+      {q:'消費税は廃止する。まず5%への緊急減税を実施した上で廃止に向かう',src:'日本共産党政策',d:'2024年',issue:'tax'},
+      {q:'原発はゼロにする。2030年代までに全原発を廃炉にする計画を示す',src:'日本共産党エネルギー政策',d:'2024年',issue:'nuclear'},
     ]
   },
   {
     id:'party_reiwa', name:'れいわ新選組', fullName:'れいわ新選組',
     x:-8.0,
     pos:{defense:-7,spy:-7,surname:+9,imperial:+6,middleeast:-8,ukraine:-6,constitution:-8,nuclear:-9,tax:-9,immigration:+6,china:-2,pension:+9,okinawa:-7,history:-4,judicial:+7},
-    summary:'消費税即時廃止を最重要政策として掲げる（廃止後は国債・法人税増税で対応）。防衛費増額に反対し外交・対話による平和を主張。原発即時廃止を訴える。奨学金チャラ・住宅費支援など大規模財政出動を提案。具体的スケジュール：政権獲得後1年以内に消費税廃止。',
+    summary:{
+      default:'消費税即時廃止を最重要政策として掲げる（廃止後は国債・法人税増税で対応）。防衛費増額に反対し外交・対話による平和を主張。原発即時廃止を訴える。奨学金チャラ・住宅費支援など大規模財政出動を提案。',
+      tax:'消費税即時廃止を最重要政策として掲げる。財源は国債と法人税・富裕層への課税強化で確保。政権獲得後1年以内の廃止を公約。',
+      defense:'軍事費2倍化に反対し外交・対話による平和の実現を追求。「防衛費増額より生活支援に回せ」と主張し、大規模な軍拡路線を根本から否定。',
+      nuclear:'原発の即時廃止を訴え、2030年以前の全廃炉を要求。脱原発と再生可能エネルギー100%移行を柱に、エネルギー政策の抜本転換を求める。',
+      constitution:'憲法9条の完全護持を堅持。防衛費増額や自衛隊の海外活動拡大に断固反対。改憲は「大企業・富裕層の利益のための戦争準備」と批判する立場。',
+    },
     ev:[
-      {q:'消費税は廃止する。財源は国債と法人税・富裕層への課税強化で確保する',src:'山本太郎代表・2024年衆院選公約',d:'2024年'},
-      {q:'軍事費2倍化に反対する。外交・対話による平和の実現を追求する',src:'れいわ新選組政策',d:'2024年'},
-      {q:'消費税廃止・奨学金チャラ・住宅費無償化など大胆な政策で生活を守る',src:'れいわ新選組公約集',d:'2024年'},
+      {q:'消費税は廃止する。財源は国債と法人税・富裕層への課税強化で確保する',src:'山本太郎代表・2024年衆院選公約',d:'2024年',issue:'tax'},
+      {q:'軍事費2倍化に反対する。外交・対話による平和の実現を追求する',src:'れいわ新選組政策',d:'2024年',issue:'defense'},
+      {q:'消費税廃止・奨学金チャラ・住宅費無償化など大胆な政策で生活を守る',src:'れいわ新選組公約集',d:'2024年',issue:'tax'},
     ]
   },
   {
     id:'party_sdp', name:'社民党', fullName:'社会民主党',
     x:-8.0,
     pos:{defense:-9,spy:-8,surname:+9,imperial:+7,middleeast:-8,ukraine:-4,constitution:-9,nuclear:-8,tax:-5,immigration:+6,china:-3,pension:+7,okinawa:-8,history:-6,judicial:+6},
-    summary:'憲法9条の改正に断固反対し、非武装平和主義を堅持。防衛費の大幅増額に反対し軍事力によらない平和外交を推進。在日米軍基地の縮小・撤去を要求。原発ゼロ・再エネ100%への転換を主張。選択的夫婦別姓の即時実現を要求。',
+    summary:{
+      default:'憲法9条の改正に断固反対し、非武装平和主義を堅持。防衛費の大幅増額に反対し軍事力によらない平和外交を推進。在日米軍基地の縮小・撤去を要求。原発ゼロ・再エネ100%への転換を主張。選択的夫婦別姓の即時実現を要求。',
+      constitution:'憲法9条の改正に断固反対し、戦争放棄・非武装平和主義を堅持。自民の改憲論議を「戦争ができる国づくり」と批判し、いかなる改憲にも反対の立場。',
+      defense:'防衛費の大幅増額に反対し、軍事力によらない平和外交を推進。在日米軍基地の縮小・撤去を要求し、日米安保の在り方そのものの見直しを主張。',
+      surname:'選択的夫婦別姓の即時実現を要求。個人の尊厳と平等を守る法改正が必要と主張し、反対する自民への批判を強める。',
+    },
     ev:[
-      {q:'憲法9条の改正に断固反対する。戦争放棄・非武装平和主義を堅持する',src:'福島みずほ党首・国会発言',d:'2024年'},
-      {q:'防衛費の大幅増額に反対する。軍事力によらない平和外交を推進する',src:'社民党政策',d:'2024年'},
-      {q:'選択的夫婦別姓の即時実現を求める。個人の尊厳と平等を守る法改正が必要だ',src:'社民党マニフェスト',d:'2024年'},
+      {q:'憲法9条の改正に断固反対する。戦争放棄・非武装平和主義を堅持する',src:'福島みずほ党首・国会発言',d:'2024年',issue:'constitution'},
+      {q:'防衛費の大幅増額に反対する。軍事力によらない平和外交を推進する',src:'社民党政策',d:'2024年',issue:'defense'},
+      {q:'選択的夫婦別姓の即時実現を求める。個人の尊厳と平等を守る法改正が必要だ',src:'社民党マニフェスト',d:'2024年',issue:'surname'},
     ]
   },
   {
     id:'party_sansei', name:'参政党', fullName:'参政党',
     x:8.0,
     pos:{defense:+7,spy:+9,surname:-8,imperial:-9,middleeast:+4,ukraine:+3,constitution:+8,nuclear:+6,tax:-4,immigration:-9,china:+8,pension:+3,okinawa:+6,history:+8,judicial:-3},
-    summary:'外国人の無制限な受入れに強く反対し厳格な入管政策を主張。スパイ防止法の早期制定を最重要課題として位置付け。選択的夫婦別姓・女系天皇に断固反対。食の安全・農業保護を重視。消費税の段階的引下げ（8%→5%）を主張。具体的数値：消費税8%→5%段階的引下げ。',
+    summary:{
+      default:'外国人の無制限な受入れに強く反対し厳格な入管政策を主張。スパイ防止法の早期制定を最重要課題として位置付け。選択的夫婦別姓・女系天皇に断固反対。食の安全・農業保護を重視。消費税の段階的引下げ（8%→5%）を主張。',
+      immigration:'外国人の無制限な受入れに強く反対し、厳格な入管政策を主張。「日本の文化・安全・雇用を守る」として移民制限を最重要政策の一つに位置付ける。',
+      spy:'スパイ防止法の早期制定を最重要課題として位置付け。「国家機密の漏洩を防ぐ法整備が急務」と主張し、他党に先駆けて強く訴えてきた政策。',
+      surname:'選択的夫婦別姓は「家族の一体感を損ない社会の分断につながる」として断固反対。日本の伝統的家族制度の維持を重要政策として掲げる。',
+      constitution:'憲法改正（9条改正）を積極推進。自衛隊の憲法明記・国防軍設置を主張し、日本の独自防衛能力の強化を訴える。',
+    },
     ev:[
-      {q:'外国人の無制限な受入れに反対する。日本の文化・安全・雇用を守るため移民政策を厳格化する',src:'神谷宗幣代表・国会発言',d:'2024年'},
-      {q:'スパイ防止法の早期制定が急務だ。国家機密の漏洩を防ぐ法整備が必要だ',src:'参政党安保政策',d:'2024年'},
-      {q:'選択的夫婦別姓は家族の一体感を損ない、社会の分断につながる。断固反対する',src:'参政党政策集',d:'2024年'},
+      {q:'外国人の無制限な受入れに反対する。日本の文化・安全・雇用を守るため移民政策を厳格化する',src:'神谷宗幣代表・国会発言',d:'2024年',issue:'immigration'},
+      {q:'スパイ防止法の早期制定が急務だ。国家機密の漏洩を防ぐ法整備が必要だ',src:'参政党安保政策',d:'2024年',issue:'spy'},
+      {q:'選択的夫婦別姓は家族の一体感を損ない、社会の分断につながる。断固反対する',src:'参政党政策集',d:'2024年',issue:'surname'},
     ]
   },
   {
     id:'party_hoshuto', name:'日本保守党', fullName:'日本保守党',
     x:9.0,
     pos:{defense:+9,spy:+9,surname:-9,imperial:-9,middleeast:+6,ukraine:+7,constitution:+9,nuclear:+7,tax:-3,immigration:-9,china:+9,pension:0,okinawa:+8,history:+9,judicial:-5},
-    summary:'無秩序な移民受入れに強く反対（「日本を守る」が党の基本理念）。靖国参拝を当然の礼儀として首相参拝を強く要求。選択的夫婦別姓・女系天皇に絶対反対。憲法改正（9条改正・国防軍設置）を最優先課題とする。スパイ防止法の即時制定を強く要求。',
+    summary:{
+      default:'無秩序な移民受入れに強く反対（「日本を守る」が党の基本理念）。靖国参拝を当然の礼儀として首相参拝を強く要求。選択的夫婦別姓・女系天皇に絶対反対。憲法改正（9条改正・国防軍設置）を最優先課題とする。スパイ防止法の即時制定を強く要求。',
+      constitution:'憲法改正（9条改正・国防軍設置）を最優先課題とする。現行憲法を「占領憲法」と位置付け、自主憲法の制定を目指す。改憲勢力の中でも最も急進的な立場。',
+      defense:'自衛力の大幅増強を主張。防衛費増額を「当然のこと」として支持し、核武装の議論すら必要との立場の議員も。独自防衛能力の確立を強く求める。',
+      immigration:'無秩序な移民受入れに強く反対。「日本の文化・価値観・治安を守る」ことを党の基本理念とし、入管法の厳格化・外国人参政権への反対を強く主張。',
+      history:'靖国神社参拝は「国のために命を捧げた英霊への当然の礼儀」として首相の参拝を強く要求。歴史認識問題では「謝罪外交からの脱却」を主張。',
+      surname:'選択的夫婦別姓は「日本の伝統的家族制度を破壊する」として絶対反対。女系天皇についても「日本の伝統・皇統を守る」観点から断固反対。',
+    },
     ev:[
-      {q:'無秩序な移民受入れに反対する。日本の文化・価値観・治安を守る厳格な入管政策を求める',src:'百田尚樹党首・国会会見',d:'2024年'},
-      {q:'靖国神社参拝は国のために命を捧げた英霊への当然の礼儀だ。首相の参拝を強く求める',src:'日本保守党政策',d:'2024年'},
-      {q:'選択的夫婦別姓は日本の伝統的家族制度を破壊する。絶対反対だ',src:'百田尚樹党首発言',d:'2024年'},
+      {q:'無秩序な移民受入れに反対する。日本の文化・価値観・治安を守る厳格な入管政策を求める',src:'百田尚樹党首・国会会見',d:'2024年',issue:'immigration'},
+      {q:'靖国神社参拝は国のために命を捧げた英霊への当然の礼儀だ。首相の参拝を強く求める',src:'日本保守党政策',d:'2024年',issue:'history'},
+      {q:'選択的夫婦別姓は日本の伝統的家族制度を破壊する。絶対反対だ',src:'百田尚樹党首発言',d:'2024年',issue:'surname'},
     ]
   },
 ];
@@ -2672,6 +2746,7 @@ function issueLabel(issue, v){
 /* ── モード切替 ── */
 function setPartyMode(){
   currentMode='party';
+  document.querySelector('.logo').innerHTML='政党<span>マップ</span>';
   document.querySelectorAll('[data-h]').forEach(b=>b.classList.remove('on'));
   document.getElementById('party-tab').classList.add('on');
   document.getElementById('party-tab').style.cssText='border-color:#c9a84c;color:#c9a84c;background:rgba(201,168,76,.12);';
@@ -2689,6 +2764,7 @@ function setPartyMode(){
 }
 function setPoliticianMode(){
   currentMode='politician';
+  document.querySelector('.logo').innerHTML='政治家<span>マップ</span>';
   document.getElementById('party-tab').classList.remove('on');
   document.getElementById('party-tab').style.cssText='border-color:#c9a84c44;color:#c9a84c88;';
   document.getElementById('fa').style.display='';
@@ -2758,8 +2834,8 @@ function drawPartyMap(){
   ctx.font='bold '+fs+'px sans-serif';
   ctx.fillStyle='#e8354a'; ctx.textAlign='center'; ctx.textBaseline='top';    ctx.fillText(issue.yPos,W/2,4);
   ctx.fillStyle='#4a7fe8'; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText(issue.yNeg,W/2,H-2);
-  ctx.fillStyle='#e8354a'; ctx.textAlign='right';  ctx.textBaseline='middle'; ctx.fillText('右派',W-4,H/2-fs-4);
-  ctx.fillStyle='#4a7fe8'; ctx.textAlign='left';   ctx.textBaseline='middle'; ctx.fillText('左派',4,H/2-fs-4);
+  ctx.fillStyle='#e8354a'; ctx.textAlign='right';  ctx.textBaseline='middle'; ctx.fillText(issue.xPos||'右派',W-4,H/2-fs-4);
+  ctx.fillStyle='#4a7fe8'; ctx.textAlign='left';   ctx.textBaseline='middle'; ctx.fillText(issue.xNeg||'左派',4,H/2-fs-4);
 
   partyHits=[];
   PARTY_DATA.forEach(party=>{
@@ -2798,7 +2874,7 @@ function drawPartyMap(){
 
   document.getElementById('sl').innerHTML=
     `<span style="color:#c9a84c;font-weight:900">政党マップ</span>`+
-    `<span style="color:#5a6a88;margin-left:8px">X軸: 左派 ↔ 右派　　Y軸: ${issue.yNeg} ↔ ${issue.yPos}</span>`;
+    `<span style="color:#5a6a88;margin-left:8px">X軸: ${issue.xNeg||'左派'} ↔ ${issue.xPos||'右派'}　　Y軸: ${issue.yNeg} ↔ ${issue.yPos}</span>`;
   const zmEl=document.getElementById('zm');
   if(zmEl) zmEl.textContent=zoom===1?'':`×${zoom.toFixed(1)}`;
 }
@@ -2815,7 +2891,14 @@ function openPartyPop(party){
   const badge=document.getElementById('pp-badge');
   badge.textContent=party.fullName;
   badge.style.cssText=`background:${col}22;border:1px solid ${col}55;color:${col}`;
-  document.getElementById('pp-summary').textContent=party.summary;
+
+  const issueLblEl=document.getElementById('pp-issue-lbl');
+  if(issueLblEl) issueLblEl.textContent='選択中のイシュー：'+issue.label;
+
+  const summaryText=typeof party.summary==='object'
+    ?(party.summary[issueKey]||party.summary.default||'')
+    :party.summary;
+  document.getElementById('pp-summary').textContent=summaryText;
 
   const lrEl=document.getElementById('pp-lr');
   lrEl.textContent=partyLR(party.x);
@@ -2826,15 +2909,120 @@ function openPartyPop(party){
   yvalEl.textContent=issueLabel(issue,yv);
   yvalEl.style.color=col;
 
-  document.getElementById('pp-ev-list').innerHTML=party.ev.map(ev=>
-    `<div class="pp-ev-item"><div class="pp-ev-q">「${ev.q}」</div>`+
-    `<div class="pp-ev-src">${ev.src}　${ev.d}</div></div>`
-  ).join('');
+  const filteredEv=party.ev.filter(ev=>!ev.issue||ev.issue===issueKey);
+  document.getElementById('pp-ev-list').innerHTML=filteredEv.length
+    ?filteredEv.map(ev=>
+        `<div class="pp-ev-item"><div class="pp-ev-q">「${ev.q}」</div>`+
+        `<div class="pp-ev-src">${ev.src}　${ev.d}</div></div>`
+      ).join('')
+    :`<div class="pp-ev-item" style="color:#3a4560;font-size:10px;font-style:italic">このイシューに関する根拠発言はまだありません</div>`;
 
   document.getElementById('party-pop').classList.add('on');
 }
 function closePartyPop(){
   document.getElementById('party-pop').classList.remove('on');
+}
+
+/* ── 政党エビデンス投稿 ── */
+let partyRptTarget = null;
+function openPartyRpt(){
+  if(!partyHlId) return;
+  const party = PARTY_DATA.find(p=>p.id===partyHlId);
+  if(!party) return;
+  partyRptTarget = party;
+  const col = pc(party.fullName)||'#888';
+  const issueKey = document.getElementById('issue-sel').value;
+
+  const nameEl = document.getElementById('rpt-party-name');
+  nameEl.innerHTML = `<b style="color:${col}">${party.name}</b><span style="font-size:10px;font-weight:400;color:#5a6a88;margin-left:8px">${party.fullName}</span>`;
+
+  const issueSelect = document.getElementById('pev-issue');
+  if(issueSelect) issueSelect.value = issueKey;
+
+  ['pev-speaker','pev-quote','pev-date'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  const srcType=document.getElementById('pev-src-type');
+  if(srcType) srcType.value='';
+  const urlEl=document.getElementById('pev-url');
+  if(urlEl) urlEl.value='';
+
+  document.getElementById('rpt-party-sending').style.display='none';
+  document.getElementById('rpt-party-done').style.display='none';
+  document.getElementById('rpt-party-btns').style.display='flex';
+  document.getElementById('rpt-party').classList.add('on');
+}
+function closePartyRpt(){
+  document.getElementById('rpt-party').classList.remove('on');
+}
+async function sendPartyRpt(){
+  const issue   = document.getElementById('pev-issue').value;
+  const speaker = document.getElementById('pev-speaker').value.trim();
+  const quote   = document.getElementById('pev-quote').value.trim();
+  const srcType = document.getElementById('pev-src-type').value;
+  const url     = document.getElementById('pev-url').value.trim();
+  if(!issue||!speaker||!quote||!srcType){
+    alert('イシュー・発言者・発言内容・出典種別は必須です');return;
+  }
+  if(!url||!url.startsWith('http')){
+    alert('出典URLは必須です。\nhttps://で始まる一次情報のURLを入力してください。');return;
+  }
+  document.getElementById('rpt-party-btns').style.display='none';
+  document.getElementById('rpt-party-sending').style.display='block';
+  try{
+    await postPartyToGitHubIssue(issue,speaker,quote,srcType,url);
+  }catch(e){
+    document.getElementById('rpt-party-sending').style.display='none';
+    document.getElementById('rpt-party-btns').style.display='flex';
+    alert('送信エラー: '+e.message+'\n\nしばらく待ってから再試行してください。');
+  }
+}
+async function postPartyToGitHubIssue(issueKey,speaker,quote,srcType,url){
+  const party = partyRptTarget;
+  const date  = document.getElementById('pev-date').value.trim()||'不明';
+  const issueObj = ISSUES.find(i=>i.key===issueKey)||{label:issueKey};
+
+  const title = '[PARTY-EV] '+party.id+' '+issueKey;
+  const body  = [
+    '## 対象政党',
+    '- ID: `'+party.id+'`',
+    '- 政党名: '+party.fullName,
+    '',
+    '## イシュー',
+    '- キー: '+issueKey,
+    '- 名称: '+issueObj.label,
+    '',
+    '## 発言情報',
+    '- 発言者: '+speaker,
+    '- 発言内容: '+quote,
+    '- 出典種別: '+srcType,
+    '- 発言日: '+date,
+    '- 出典URL: '+url,
+    '',
+    '<!-- PENDING_REVIEW -->',
+  ].join('\n');
+  const labels = ['party-submission','pending-review'];
+
+  const res = await fetch(WORKER_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({title,body,labels}),
+  });
+
+  document.getElementById('rpt-party-sending').style.display='none';
+
+  if(!res.ok){
+    const err = await res.json().catch(()=>({message:res.statusText}));
+    throw new Error(err.message||'HTTP '+res.status);
+  }
+
+  const doneEl = document.getElementById('rpt-party-done');
+  doneEl.innerHTML=
+    '<div class="rc-done-icon">📬</div>'+
+    '<div class="rc-done-msg">投稿を受け付けました</div>'+
+    '<div class="rc-done-sub">AIが審査し、翌日〜数日以内に反映されます</div>';
+  doneEl.style.display='block';
+  setTimeout(closePartyRpt,4000);
 }</script>
 
 <div id="quiz" style="display:none;position:fixed;inset:0;z-index:950;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:16px;">
@@ -2869,6 +3057,7 @@ function closePartyPop(){
     <div class="pp-head">
       <div class="pp-name" id="pp-name"></div>
       <div class="pp-badge" id="pp-badge"></div>
+      <div class="pp-issue-lbl" id="pp-issue-lbl"></div>
       <div class="pp-summary-lbl">AI 要約</div>
       <div class="pp-summary" id="pp-summary"></div>
     </div>
@@ -2886,6 +3075,76 @@ function closePartyPop(){
     <div class="pp-ev">
       <div class="pp-ev-lbl">根拠発言</div>
       <div id="pp-ev-list"></div>
+    </div>
+    <button class="pp-submit-btn" onclick="openPartyRpt()">+ 発言情報を投稿</button>
+  </div>
+</div>
+
+<!-- 政党エビデンス投稿モーダル -->
+<div id="rpt-party">
+  <div id="rpt-party-bg" onclick="closePartyRpt()"></div>
+  <div class="rc">
+    <h3>💬 政党の発言情報を投稿</h3>
+    <p class="rc-sub">政党公式の一次情報のみ対象です。切り抜き・まとめサイト・二次情報（新聞報道等）は受け付けられません。</p>
+    <div class="rc-target" id="rpt-party-name"></div>
+    <div id="rpt-party-form">
+      <div class="rc-field">
+        <div class="rc-label">イシュー <b>*</b></div>
+        <select id="pev-issue">
+          <option value="">選択してください</option>
+          <option value="defense">自衛隊・防衛予算</option>
+          <option value="spy">スパイ防止法</option>
+          <option value="surname">夫婦別姓</option>
+          <option value="imperial">皇室制度・女系天皇</option>
+          <option value="middleeast">イラン・中東情勢</option>
+          <option value="ukraine">ロシアのウクライナ侵攻</option>
+          <option value="constitution">憲法改正・9条</option>
+          <option value="nuclear">原発・エネルギー政策</option>
+          <option value="tax">消費税</option>
+          <option value="immigration">移民・外国人政策</option>
+          <option value="china">対中政策</option>
+          <option value="pension">年金・社会保障</option>
+          <option value="okinawa">沖縄基地問題</option>
+          <option value="history">歴史認識・靖国参拝</option>
+          <option value="judicial">冤罪・司法制度改革</option>
+        </select>
+      </div>
+      <div class="rc-field">
+        <div class="rc-label">発言者 <b>*</b></div>
+        <input type="text" id="pev-speaker" placeholder="例：岸田文雄（代表）、党名義など">
+      </div>
+      <div class="rc-field">
+        <div class="rc-label">発言内容 <b>*</b></div>
+        <textarea id="pev-quote" placeholder="発言・公約・マニフェスト等の内容を入力してください"></textarea>
+      </div>
+      <div class="rc-field">
+        <div class="rc-label">出典種別 <b>*</b></div>
+        <select id="pev-src-type">
+          <option value="">選択してください</option>
+          <option value="政党公式マニフェスト">政党公式マニフェスト</option>
+          <option value="国会答弁">国会答弁</option>
+          <option value="党代表公式SNS">党代表公式SNS</option>
+          <option value="政党公式HP">政党公式HP</option>
+        </select>
+      </div>
+      <div class="rc-field">
+        <div class="rc-label">出典URL <b style="color:#e8354a">*必須（一次情報のみ）</b></div>
+        <input type="url" id="pev-url" placeholder="https://" required>
+        <div style="font-size:9px;color:#5a6a88;margin-top:4px;line-height:1.6">
+          ✅ 有効: 政党公式HP・マニフェストPDF・国会議事録・代表公式X<br>
+          ❌ 無効: 切り抜き・まとめサイト・新聞報道・ブログ・二次情報
+        </div>
+      </div>
+      <div class="rc-field">
+        <div class="rc-label">発言日</div>
+        <input type="text" id="pev-date" placeholder="例：2024年3月、2024年など">
+      </div>
+    </div>
+    <div id="rpt-party-sending" class="rc-sending">送信中...</div>
+    <div id="rpt-party-done" class="rc-done" style="display:none"></div>
+    <div class="rc-btns" id="rpt-party-btns">
+      <button class="rc-send" onclick="sendPartyRpt()">投稿する</button>
+      <button class="rc-cancel" onclick="closePartyRpt()">キャンセル</button>
     </div>
   </div>
 </div>
