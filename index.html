@@ -241,6 +241,33 @@ body{display:flex;flex-direction:column;}
 .up-actions{display:flex;gap:8px;margin-bottom:22px;}
 .up-act-primary{flex:1;padding:11px;background:#3dd68c22;border:1px solid #3dd68c55;color:#3dd68c;font-size:12px;font-weight:900;cursor:pointer;}
 .up-act-secondary{flex:0 0 auto;padding:11px 14px;background:none;border:1px solid #2c3550;color:#5a6a88;font-size:12px;cursor:pointer;}
+
+/* ═══ 政党マップ ═══ */
+#issue-row{flex:0 0 auto;display:none;align-items:center;gap:8px;padding:4px 12px 6px;}
+#issue-row.on{display:flex;}
+#issue-sel{background:#0e1118;border:1px solid #2c3550;color:#dce4f0;font-size:12px;padding:6px 10px;outline:none;appearance:none;-webkit-appearance:none;cursor:pointer;flex:1;max-width:320px;}
+#issue-sel:focus{border-color:#c9a84c;}
+#party-pop{display:none;position:fixed;top:60px;right:14px;z-index:600;width:100%;max-width:340px;}
+#party-pop.on{display:block;}
+.ppc{background:#141820;border:1px solid #2c3550;box-shadow:0 20px 60px rgba(0,0,0,.9);position:relative;}
+.pp-bar{height:3px;}
+.pp-head{padding:14px 14px 10px;}
+.pp-name{font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;}
+.pp-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;margin-bottom:8px;}
+.pp-summary-lbl{font-size:9px;color:#c9a84c;font-weight:900;letter-spacing:.1em;margin-bottom:5px;}
+.pp-summary{font-size:11px;color:#b0bcd0;line-height:1.7;}
+.pp-axes{display:flex;gap:10px;padding:10px 14px;background:rgba(0,0,0,.3);border-top:1px solid #1e2535;}
+.pp-axis{flex:1;text-align:center;}
+.pp-axis-lbl{font-size:9px;color:#5a6a88;margin-bottom:3px;}
+.pp-axis-val{font-size:12px;font-weight:700;}
+.pp-ev{padding:10px 14px 14px;border-top:1px solid #1e2535;}
+.pp-ev-lbl{font-size:9px;color:#c9a84c;font-weight:900;letter-spacing:.1em;margin-bottom:8px;}
+.pp-ev-item{padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.pp-ev-item:last-child{border-bottom:none;}
+.pp-ev-q{font-size:11px;color:#dce4f0;line-height:1.65;}
+.pp-ev-src{font-size:9px;color:#5a6a88;margin-top:3px;}
+.pp-xb{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.5);border:none;color:#888;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.pp-xb:hover{color:#fff;}
 </style>
 </head>
 <body>
@@ -287,6 +314,8 @@ body{display:flex;flex-direction:column;}
   <button class="tb on" data-h="all"   onclick="setH('all',this)">両院</button>
   <button class="tb"    data-h="衆議院" onclick="setH('衆議院',this)">衆議院</button>
   <button class="tb"    data-h="参議院" onclick="setH('参議院',this)">参議院</button>
+  <span style="width:1px;height:14px;background:#2c3550;margin:0 4px;display:inline-block;flex-shrink:0"></span>
+  <button class="tb" id="party-tab" onclick="setPartyMode()" style="border-color:#c9a84c44;color:#c9a84c88;">政党マップ</button>
 </div>
 <div class="tab-row" style="padding-bottom:4px;">
   <span class="tl">年齢:</span>
@@ -297,6 +326,26 @@ body{display:flex;flex-direction:column;}
   <button class="tb"    data-a="60s"  onclick="setA('60s',this)">60代</button>
   <button class="tb"    data-a="70s"  onclick="setA('70s',this)">70代〜</button>
   <button class="tb"    data-a="unknown" onclick="setA('unknown',this)" style="margin-left:8px;opacity:0.7">未登録</button>
+</div>
+<div id="issue-row">
+  <span class="tl" style="white-space:nowrap">イシュー:</span>
+  <select id="issue-sel" onchange="onIssueChange()">
+    <option value="defense">自衛隊・防衛予算（増強 ↔ 縮小）</option>
+    <option value="spy">スパイ防止法（制定賛成 ↔ 反対）</option>
+    <option value="surname">夫婦別姓（選択的賛成 ↔ 反対）</option>
+    <option value="imperial">皇室制度・女系天皇（女系容認 ↔ 男系維持）</option>
+    <option value="middleeast">イラン・中東情勢（強硬 ↔ 融和）</option>
+    <option value="ukraine">ロシアのウクライナ侵攻（強硬支援 ↔ 外交解決）</option>
+    <option value="constitution">憲法改正・9条（改憲推進 ↔ 護憲）</option>
+    <option value="nuclear">原発・エネルギー政策（推進 ↔ 脱原発）</option>
+    <option value="tax">消費税（増税 ↔ 減税・廃止）</option>
+    <option value="immigration">移民・外国人政策（受入推進 ↔ 制限・慎重）</option>
+    <option value="china">対中政策（強硬 ↔ 融和）</option>
+    <option value="pension">年金・社会保障（拡充 ↔ 縮小・改革）</option>
+    <option value="okinawa">沖縄基地問題（現状維持・強化 ↔ 縮小・撤去）</option>
+    <option value="history">歴史認識・靖国参拝（参拝推進 ↔ 参拝反対）</option>
+    <option value="judicial">冤罪・司法制度改革（改革推進 ↔ 現状維持）</option>
+  </select>
 </div>
 <div id="fa">
   <span class="fl">絞込:</span>
@@ -1301,6 +1350,7 @@ const MIN_ZOOM=0.5, MAX_ZOOM=6;
    The browser upscales via CSS naturally.
 */
 function draw(){
+  if(typeof currentMode!=='undefined'&&currentMode==='party'){drawPartyMap();return;}
   const ma=document.getElementById('ma');
   let W=ma.clientWidth;
   let H=ma.clientHeight;
@@ -1738,6 +1788,7 @@ function setF(party,btn){
   draw();
 }
 function setH(house,btn){
+  if(typeof currentMode!=='undefined'&&currentMode==='party') setPoliticianMode();
   fH=house; document.querySelectorAll('[data-h]').forEach(b=>b.classList.toggle('on',b.dataset.h===house));
   draw();
 }
@@ -2345,8 +2396,29 @@ cv.addEventListener('mousemove', e => {
 const scaleY = cv.height / rect.height;
 const mx = (e.clientX - rect.left) * scaleX;
 const my = (e.clientY - rect.top) * scaleY;
-  const hit = hits.find(h => Math.hypot(mx-h.cx, my-h.cy) <= h.r);
   const tip = document.getElementById('tip');
+
+  // 政党マップモード
+  if(typeof currentMode!=='undefined'&&currentMode==='party'){
+    const hit=partyHits.find(h=>Math.hypot(mx-h.cx,my-h.cy)<=h.r);
+    if(hit){
+      const p=hit.party; const col=pc(p.fullName)||'#888';
+      document.getElementById('tip-name').textContent=p.name;
+      const tp=document.getElementById('tip-party');
+      tp.textContent=p.fullName;
+      tp.style.cssText=`background:${col}22;border:1px solid ${col}55;color:${col}`;
+      document.getElementById('tip-pos').textContent=partyLR(p.x);
+      tip.style.left=Math.min(e.clientX+12,window.innerWidth-220)+'px';
+      tip.style.top=Math.max(e.clientY-80,4)+'px';
+      tip.classList.add('on'); cv.style.cursor='pointer';
+    } else {
+      tip.classList.remove('on');
+      cv.style.cursor=dragging?'grabbing':'default';
+    }
+    return;
+  }
+
+  const hit = hits.find(h => Math.hypot(mx-h.cx, my-h.cy) <= h.r);
   if(hit){
     const p = hit.p;
     const col = pc(p.party);
@@ -2379,6 +2451,22 @@ cv.addEventListener('click', e => {
 const scaleY = cv.height / rect.height;
 const mx = (e.clientX - rect.left) * scaleX;
 const my = (e.clientY - rect.top) * scaleY;
+
+  // 政党マップモード
+  if(typeof currentMode!=='undefined'&&currentMode==='party'){
+    const hit=partyHits.find(h=>Math.hypot(mx-h.cx,my-h.cy)<=h.r);
+    if(hit){
+      partyHlId=hit.party.id;
+      draw();
+      openPartyPop(hit.party);
+    } else {
+      partyHlId=null;
+      closePartyPop();
+      draw();
+    }
+    return;
+  }
+
   const hit = hits.find(h => Math.hypot(mx-h.cx, my-h.cy) <= h.r);
   if(hit){
     hlId = hit.p.id;
@@ -2420,7 +2508,334 @@ window.addEventListener('mousemove', e => {
 window.addEventListener('mouseup', ()=>{ dragging=false; cv.style.cursor='default'; });
 
 // ダブルクリック → リセット
-cv.addEventListener('dblclick', ()=>{ zoom=1; panX=0; panY=0; draw(); });</script>
+cv.addEventListener('dblclick', ()=>{ zoom=1; panX=0; panY=0; draw(); });
+
+/* ═══════════════════════════════════
+   政党マップ
+═══════════════════════════════════ */
+let currentMode = 'politician';
+let partyHlId = null;
+let partyHits = [];
+
+const ISSUES = [
+  {key:'defense',     label:'自衛隊・防衛予算',     yPos:'増強',          yNeg:'縮小'},
+  {key:'spy',         label:'スパイ防止法',          yPos:'制定賛成',      yNeg:'反対'},
+  {key:'surname',     label:'夫婦別姓',              yPos:'選択的賛成',    yNeg:'反対'},
+  {key:'imperial',    label:'皇室制度（女系天皇）',  yPos:'女系容認',      yNeg:'男系維持'},
+  {key:'middleeast',  label:'イラン・中東情勢',      yPos:'強硬',          yNeg:'融和'},
+  {key:'ukraine',     label:'ロシアのウクライナ侵攻',yPos:'強硬支援',      yNeg:'外交解決'},
+  {key:'constitution',label:'憲法改正（9条）',       yPos:'改憲推進',      yNeg:'護憲'},
+  {key:'nuclear',     label:'原発・エネルギー政策',  yPos:'推進',          yNeg:'脱原発'},
+  {key:'tax',         label:'消費税',                yPos:'増税',          yNeg:'減税・廃止'},
+  {key:'immigration', label:'移民・外国人政策',      yPos:'受入推進',      yNeg:'制限・慎重'},
+  {key:'china',       label:'対中政策',              yPos:'強硬',          yNeg:'融和'},
+  {key:'pension',     label:'年金・社会保障',        yPos:'拡充',          yNeg:'縮小・改革'},
+  {key:'okinawa',     label:'沖縄基地問題',          yPos:'現状維持・強化',yNeg:'縮小・撤去'},
+  {key:'history',     label:'歴史認識・靖国参拝',    yPos:'参拝推進',      yNeg:'参拝反対'},
+  {key:'judicial',    label:'冤罪・司法制度改革',    yPos:'改革推進',      yNeg:'現状維持'},
+];
+
+const PARTY_DATA = [
+  {
+    id:'party_ldp', name:'自民党', fullName:'自由民主党',
+    x:7.0,
+    pos:{defense:+8,spy:+8,surname:-5,imperial:-7,middleeast:+5,ukraine:+7,constitution:+8,nuclear:+8,tax:+5,immigration:-3,china:+7,pension:-3,okinawa:+7,history:+7,judicial:-6},
+    summary:'防衛費のGDP比2%増額（5年間で43兆円）を決定・実施中。既設原発の最大限活用と次世代革新炉建設を推進。選択的夫婦別姓・女系天皇には党内反対多数。消費税率の維持を堅持。スパイ防止法の制定に積極的。具体的数値：防衛費43兆円・2027年度GDP比2%達成を目標。',
+    ev:[
+      {q:'2027年度に防衛費をGDP比2%に増額することを決定。5年間で43兆円を確保する',src:'岸田首相・国家安全保障戦略改訂発表',d:'2022年12月'},
+      {q:'既設の原発を最大限活用し、次世代革新炉の建設を推進する',src:'GX実行会議決定',d:'2023年2月'},
+      {q:'自衛隊を憲法に明記することは党是であり、改憲を次の参院選の争点に据える',src:'自民党大会',d:'2024年3月'},
+    ]
+  },
+  {
+    id:'party_komeito', name:'公明党', fullName:'公明党',
+    x:2.0,
+    pos:{defense:+4,spy:+3,surname:+3,imperial:-2,middleeast:0,ukraine:+5,constitution:+3,nuclear:+3,tax:+4,immigration:+2,china:+1,pension:+4,okinawa:+4,history:0,judicial:-2},
+    summary:'加憲（現行条文維持）の立場で9条改正に慎重。全世代型社会保障改革を推進し、子育て・介護の充実と財政健全化を両立する方針。外国人材の受入れ拡大と共生社会の実現を支持。防衛費増額は一定容認も財源論に慎重。',
+    ev:[
+      {q:'加憲の立場で、憲法9条改正には慎重だ。平和主義を守りながら改憲を議論する',src:'山口那津男代表・党大会発言',d:'2023年'},
+      {q:'全世代型社会保障改革を進め、子育て・介護の充実と財政健全化を両立する',src:'公明党マニフェスト',d:'2024年'},
+      {q:'外国人材の受入れ拡大と共生社会の実現を推進する',src:'公明党政策集',d:'2024年'},
+    ]
+  },
+  {
+    id:'party_rikken', name:'立憲民主党', fullName:'立憲民主党',
+    x:-5.0,
+    pos:{defense:-2,spy:-4,surname:+8,imperial:+4,middleeast:-3,ukraine:+4,constitution:-6,nuclear:-5,tax:-2,immigration:+3,china:+3,pension:+5,okinawa:-4,history:-4,judicial:+5},
+    summary:'防衛費倍増に反対（財源・プロセスの問題を指摘）。2030年代原発ゼロを目標。選択的夫婦別姓の今国会実現を主張。消費税の時限的引下げ（5%案）を提案。憲法9条の維持を堅持。具体的主張：防衛費はGDP比1%維持・時限的消費税5%減税。',
+    ev:[
+      {q:'選択的夫婦別姓は30年来の宿題。今国会で必ず実現する',src:'泉健太代表・国会会見',d:'2024年'},
+      {q:'防衛費倍増は必要性と財源について国民的議論なき性急な決定であり容認できない',src:'衆議院予算委員会',d:'2023年'},
+      {q:'2030年代に原発ゼロを実現し、再生可能エネルギー中心の社会を作る',src:'立憲民主党エネルギー政策',d:'2024年'},
+    ]
+  },
+  {
+    id:'party_ishin', name:'維新の会', fullName:'日本維新の会',
+    x:1.0,
+    pos:{defense:+5,spy:+5,surname:+8,imperial:+2,middleeast:+3,ukraine:+6,constitution:+6,nuclear:+4,tax:-1,immigration:+1,china:+6,pension:-4,okinawa:+3,history:+1,judicial:+4},
+    summary:'憲法改正を積極推進（自衛隊明記・教育無償化を優先）。選択的夫婦別姓の早期実現を強く主張。身を切る改革で社会保障の持続可能性向上を目指す。教育無償化は大阪で先行実施中（高校・大学）。スパイ防止法の制定を支持。',
+    ev:[
+      {q:'憲法改正を実現するための積極的な推進政党だ。自衛隊明記と教育無償化を優先させる',src:'維新党大会',d:'2024年'},
+      {q:'選択的夫婦別姓の早期実現を強く求める。個人の自由の問題だ',src:'国会答弁（藤田文武幹事長）',d:'2024年'},
+      {q:'身を切る改革で政治・行政の無駄を省き、社会保障の持続可能性を高める',src:'日本維新の会マニフェスト',d:'2024年'},
+    ]
+  },
+  {
+    id:'party_dpfp', name:'国民民主党', fullName:'国民民主党',
+    x:-1.0,
+    pos:{defense:+4,spy:+3,surname:+6,imperial:+1,middleeast:+2,ukraine:+5,constitution:+3,nuclear:+5,tax:-5,immigration:-2,china:+5,pension:+2,okinawa:+2,history:0,judicial:+2},
+    summary:'「103万円の壁」を178万円に引上げを要求・与党と合意（2024年衆院選の主要公約）。手取り増加策として所得税減税を推進。原発活用とエネルギー安保の両立を主張。防衛費増額は財源を国民に説明の上で判断。具体的数値：基礎控除178万円へ引上げ合意。',
+    ev:[
+      {q:'103万円の壁を178万円に引き上げる。手取りを増やし内需を拡大する',src:'玉木雄一郎代表・2024年衆院選公約発表',d:'2024年'},
+      {q:'エネルギー安全保障と脱炭素の両立のため、安全が確認された原発を活用する',src:'国民民主党エネルギー政策',d:'2024年'},
+      {q:'現実的な安全保障政策を追求する。防衛費の増額は国民に説明した上で判断する',src:'国民民主党安保政策',d:'2024年'},
+    ]
+  },
+  {
+    id:'party_jcp', name:'日本共産党', fullName:'日本共産党',
+    x:-9.0,
+    pos:{defense:-9,spy:-8,surname:+8,imperial:+7,middleeast:-7,ukraine:-5,constitution:-9,nuclear:-8,tax:-8,immigration:+5,china:-4,pension:+8,okinawa:-8,history:-7,judicial:+7},
+    summary:'軍事費2倍化に断固反対（GDP比2%増額を「憲法違反の大軍拡」と批判）。消費税の廃止を主張（段階的5%→廃止の工程表あり）。2030年代原発ゼロを要求。在日米軍基地の段階的撤去を主張。スパイ防止法制定に反対。具体的数値：防衛費はGDP比1%以下維持・消費税廃止。',
+    ev:[
+      {q:'軍事費2倍化は憲法違反の大軍拡だ。国民の暮らしを犠牲にした軍備増強に断固反対する',src:'志位和夫委員長・衆議院予算委員会',d:'2023年'},
+      {q:'消費税は廃止する。まず5%への緊急減税を実施した上で廃止に向かう',src:'日本共産党政策',d:'2024年'},
+      {q:'原発はゼロにする。2030年代までに全原発を廃炉にする計画を示す',src:'日本共産党エネルギー政策',d:'2024年'},
+    ]
+  },
+  {
+    id:'party_reiwa', name:'れいわ新選組', fullName:'れいわ新選組',
+    x:-8.0,
+    pos:{defense:-7,spy:-7,surname:+9,imperial:+6,middleeast:-8,ukraine:-6,constitution:-8,nuclear:-9,tax:-9,immigration:+6,china:-2,pension:+9,okinawa:-7,history:-4,judicial:+7},
+    summary:'消費税即時廃止を最重要政策として掲げる（廃止後は国債・法人税増税で対応）。防衛費増額に反対し外交・対話による平和を主張。原発即時廃止を訴える。奨学金チャラ・住宅費支援など大規模財政出動を提案。具体的スケジュール：政権獲得後1年以内に消費税廃止。',
+    ev:[
+      {q:'消費税は廃止する。財源は国債と法人税・富裕層への課税強化で確保する',src:'山本太郎代表・2024年衆院選公約',d:'2024年'},
+      {q:'軍事費2倍化に反対する。外交・対話による平和の実現を追求する',src:'れいわ新選組政策',d:'2024年'},
+      {q:'消費税廃止・奨学金チャラ・住宅費無償化など大胆な政策で生活を守る',src:'れいわ新選組公約集',d:'2024年'},
+    ]
+  },
+  {
+    id:'party_sdp', name:'社民党', fullName:'社会民主党',
+    x:-8.0,
+    pos:{defense:-9,spy:-8,surname:+9,imperial:+7,middleeast:-8,ukraine:-4,constitution:-9,nuclear:-8,tax:-5,immigration:+6,china:-3,pension:+7,okinawa:-8,history:-6,judicial:+6},
+    summary:'憲法9条の改正に断固反対し、非武装平和主義を堅持。防衛費の大幅増額に反対し軍事力によらない平和外交を推進。在日米軍基地の縮小・撤去を要求。原発ゼロ・再エネ100%への転換を主張。選択的夫婦別姓の即時実現を要求。',
+    ev:[
+      {q:'憲法9条の改正に断固反対する。戦争放棄・非武装平和主義を堅持する',src:'福島みずほ党首・国会発言',d:'2024年'},
+      {q:'防衛費の大幅増額に反対する。軍事力によらない平和外交を推進する',src:'社民党政策',d:'2024年'},
+      {q:'選択的夫婦別姓の即時実現を求める。個人の尊厳と平等を守る法改正が必要だ',src:'社民党マニフェスト',d:'2024年'},
+    ]
+  },
+  {
+    id:'party_sansei', name:'参政党', fullName:'参政党',
+    x:8.0,
+    pos:{defense:+7,spy:+9,surname:-8,imperial:-9,middleeast:+4,ukraine:+3,constitution:+8,nuclear:+6,tax:-4,immigration:-9,china:+8,pension:+3,okinawa:+6,history:+8,judicial:-3},
+    summary:'外国人の無制限な受入れに強く反対し厳格な入管政策を主張。スパイ防止法の早期制定を最重要課題として位置付け。選択的夫婦別姓・女系天皇に断固反対。食の安全・農業保護を重視。消費税の段階的引下げ（8%→5%）を主張。具体的数値：消費税8%→5%段階的引下げ。',
+    ev:[
+      {q:'外国人の無制限な受入れに反対する。日本の文化・安全・雇用を守るため移民政策を厳格化する',src:'神谷宗幣代表・国会発言',d:'2024年'},
+      {q:'スパイ防止法の早期制定が急務だ。国家機密の漏洩を防ぐ法整備が必要だ',src:'参政党安保政策',d:'2024年'},
+      {q:'選択的夫婦別姓は家族の一体感を損ない、社会の分断につながる。断固反対する',src:'参政党政策集',d:'2024年'},
+    ]
+  },
+  {
+    id:'party_hoshuto', name:'日本保守党', fullName:'日本保守党',
+    x:9.0,
+    pos:{defense:+9,spy:+9,surname:-9,imperial:-9,middleeast:+6,ukraine:+7,constitution:+9,nuclear:+7,tax:-3,immigration:-9,china:+9,pension:0,okinawa:+8,history:+9,judicial:-5},
+    summary:'無秩序な移民受入れに強く反対（「日本を守る」が党の基本理念）。靖国参拝を当然の礼儀として首相参拝を強く要求。選択的夫婦別姓・女系天皇に絶対反対。憲法改正（9条改正・国防軍設置）を最優先課題とする。スパイ防止法の即時制定を強く要求。',
+    ev:[
+      {q:'無秩序な移民受入れに反対する。日本の文化・価値観・治安を守る厳格な入管政策を求める',src:'百田尚樹党首・国会会見',d:'2024年'},
+      {q:'靖国神社参拝は国のために命を捧げた英霊への当然の礼儀だ。首相の参拝を強く求める',src:'日本保守党政策',d:'2024年'},
+      {q:'選択的夫婦別姓は日本の伝統的家族制度を破壊する。絶対反対だ',src:'百田尚樹党首発言',d:'2024年'},
+    ]
+  },
+];
+
+/* ── ラベル関数 ── */
+function partyLR(v){
+  if(v<=-7) return '強硬左派';
+  if(v<=-4) return '左派';
+  if(v<=-1) return 'やや左寄り';
+  if(v<=1)  return '中道';
+  if(v<=4)  return 'やや右寄り';
+  if(v<=7)  return '右派';
+  return '強硬右派';
+}
+function issueLabel(issue, v){
+  const pos=issue.yPos, neg=issue.yNeg;
+  if(v>=7)  return `強く${pos}`;
+  if(v>=3)  return pos;
+  if(v>=1)  return `やや${pos}`;
+  if(v>-1)  return '中立';
+  if(v>=-3) return `やや${neg}`;
+  if(v>=-7) return neg;
+  return `強く${neg}`;
+}
+
+/* ── モード切替 ── */
+function setPartyMode(){
+  currentMode='party';
+  document.querySelectorAll('[data-h]').forEach(b=>b.classList.remove('on'));
+  document.getElementById('party-tab').classList.add('on');
+  document.getElementById('party-tab').style.cssText='border-color:#c9a84c;color:#c9a84c;background:rgba(201,168,76,.12);';
+  document.getElementById('fa').style.display='none';
+  document.getElementById('sa').style.display='none';
+  document.querySelectorAll('.tab-row').forEach(row=>{
+    if(row.querySelector('[data-a]')) row.style.display='none';
+  });
+  document.getElementById('issue-row').classList.add('on');
+  clrP();
+  closePartyPop();
+  partyHlId=null;
+  zoom=1; panX=0; panY=0;
+  draw();
+}
+function setPoliticianMode(){
+  currentMode='politician';
+  document.getElementById('party-tab').classList.remove('on');
+  document.getElementById('party-tab').style.cssText='border-color:#c9a84c44;color:#c9a84c88;';
+  document.getElementById('fa').style.display='';
+  document.getElementById('sa').style.display='';
+  document.querySelectorAll('.tab-row').forEach(row=>{
+    if(row.querySelector('[data-a]')) row.style.display='';
+  });
+  document.getElementById('issue-row').classList.remove('on');
+  closePartyPop();
+  partyHlId=null;
+  zoom=1; panX=0; panY=0;
+  draw();
+}
+function onIssueChange(){
+  closePartyPop();
+  partyHlId=null;
+  draw();
+}
+
+/* ── 政党マップ描画 ── */
+function drawPartyMap(){
+  const ma=document.getElementById('ma');
+  let W=ma.clientWidth, H=ma.clientHeight;
+  if(!H){
+    const els=['hdr','notice','issue-row','st'];
+    let used=0;
+    els.forEach(id=>{const e=document.getElementById(id);if(e)used+=e.offsetHeight||0;});
+    document.querySelectorAll('.tab-row').forEach(e=>{used+=e.offsetHeight||0;});
+    H=Math.max(300,(window.innerHeight||800)-used-20);
+    ma.style.height=H+'px';
+  }
+  if(!W||!H){requestAnimationFrame(drawPartyMap);return;}
+
+  const cv2=document.getElementById('cv');
+  cv2.width=W; cv2.height=H;
+  cv2.style.width=W+'px'; cv2.style.height=H+'px';
+  const ctx=cv2.getContext('2d');
+
+  const issueKey=document.getElementById('issue-sel').value;
+  const issue=ISSUES.find(i=>i.key===issueKey)||ISSUES[0];
+
+  const SC=Math.min(W,H)/2/10*0.84;
+  const tx2=v=>W/2+(v*SC+panX)*zoom;
+  const ty2=v=>H/2+(-v*SC+panY)*zoom;
+  const cx0=tx2(0), cy0=ty2(0);
+
+  ctx.fillStyle='#07090f'; ctx.fillRect(0,0,W,H);
+
+  ctx.fillStyle='rgba(232,53,74,.05)';  ctx.fillRect(cx0,0,W-cx0,cy0);
+  ctx.fillStyle='rgba(201,168,76,.02)'; ctx.fillRect(0,0,cx0,cy0);
+  ctx.fillStyle='rgba(74,127,232,.05)'; ctx.fillRect(0,cy0,cx0,H-cy0);
+  ctx.fillStyle='rgba(80,80,120,.02)';  ctx.fillRect(cx0,cy0,W-cx0,H-cy0);
+
+  ctx.strokeStyle='#1e2535'; ctx.lineWidth=0.5;
+  for(let v=-10;v<=10;v+=2){
+    if(!v) continue;
+    const gx=tx2(v),gy=ty2(v);
+    if(gx>0&&gx<W){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    if(gy>0&&gy<H){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+  }
+
+  ctx.strokeStyle='#3a4560'; ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(0,cy0);ctx.lineTo(W,cy0);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx0,0);ctx.lineTo(cx0,H);ctx.stroke();
+
+  const fs=W<420?11:13;
+  ctx.font='bold '+fs+'px sans-serif';
+  ctx.fillStyle='#e8354a'; ctx.textAlign='center'; ctx.textBaseline='top';    ctx.fillText(issue.yPos,W/2,4);
+  ctx.fillStyle='#4a7fe8'; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText(issue.yNeg,W/2,H-2);
+  ctx.fillStyle='#e8354a'; ctx.textAlign='right';  ctx.textBaseline='middle'; ctx.fillText('右派',W-4,H/2-fs-4);
+  ctx.fillStyle='#4a7fe8'; ctx.textAlign='left';   ctx.textBaseline='middle'; ctx.fillText('左派',4,H/2-fs-4);
+
+  partyHits=[];
+  PARTY_DATA.forEach(party=>{
+    const yv=party.pos[issueKey]??0;
+    const px2=tx2(party.x), py2=ty2(yv);
+    const col=pc(party.fullName)||'#888';
+    const hl=(party.id===partyHlId);
+    const r=hl?18:14;
+    const alpha=hl?1:(partyHlId?0.5:0.9);
+
+    partyHits.push({party,cx:px2,cy:py2,r:r+10});
+
+    if(hl){
+      const g=ctx.createRadialGradient(px2,py2,0,px2,py2,r*3.5);
+      g.addColorStop(0,col+'55'); g.addColorStop(1,col+'00');
+      ctx.beginPath();ctx.arc(px2,py2,r*3.5,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+    }
+
+    ctx.globalAlpha=alpha;
+    ctx.beginPath();ctx.arc(px2,py2,r,0,Math.PI*2);
+    ctx.fillStyle=col;ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.8)';ctx.lineWidth=hl?2.5:1.5;ctx.stroke();
+    ctx.globalAlpha=1;
+
+    const lfs=hl?12:10;
+    ctx.font=(hl?'bold ':'')+lfs+'px sans-serif';
+    const name=party.name;
+    const lx=px2, ly=py2+r+lfs+3;
+    ctx.globalAlpha=alpha;
+    ctx.fillStyle='rgba(7,9,15,.9)';ctx.textAlign='center';ctx.textBaseline='top';
+    for(let a=-1;a<=1;a++) for(let b=-1;b<=1;b++){if(a||b)ctx.fillText(name,lx+a,ly+b);}
+    ctx.fillStyle=hl?'#fff':(partyHlId?'#aaa':'#dce4f0');
+    ctx.fillText(name,lx,ly);
+    ctx.globalAlpha=1;
+  });
+
+  document.getElementById('sl').innerHTML=
+    `<span style="color:#c9a84c;font-weight:900">政党マップ</span>`+
+    `<span style="color:#5a6a88;margin-left:8px">X軸: 左派 ↔ 右派　　Y軸: ${issue.yNeg} ↔ ${issue.yPos}</span>`;
+  const zmEl=document.getElementById('zm');
+  if(zmEl) zmEl.textContent=zoom===1?'':`×${zoom.toFixed(1)}`;
+}
+
+/* ── 政党ポップアップ ── */
+function openPartyPop(party){
+  const col=pc(party.fullName)||'#888';
+  const issueKey=document.getElementById('issue-sel').value;
+  const issue=ISSUES.find(i=>i.key===issueKey)||ISSUES[0];
+  const yv=party.pos[issueKey]??0;
+
+  document.getElementById('pp-bar').style.background=`linear-gradient(90deg,${col},transparent)`;
+  document.getElementById('pp-name').textContent=party.name;
+  const badge=document.getElementById('pp-badge');
+  badge.textContent=party.fullName;
+  badge.style.cssText=`background:${col}22;border:1px solid ${col}55;color:${col}`;
+  document.getElementById('pp-summary').textContent=party.summary;
+
+  const lrEl=document.getElementById('pp-lr');
+  lrEl.textContent=partyLR(party.x);
+  lrEl.style.color=col;
+
+  document.getElementById('pp-y-lbl').textContent=issue.label;
+  const yvalEl=document.getElementById('pp-yval');
+  yvalEl.textContent=issueLabel(issue,yv);
+  yvalEl.style.color=col;
+
+  document.getElementById('pp-ev-list').innerHTML=party.ev.map(ev=>
+    `<div class="pp-ev-item"><div class="pp-ev-q">「${ev.q}」</div>`+
+    `<div class="pp-ev-src">${ev.src}　${ev.d}</div></div>`
+  ).join('');
+
+  document.getElementById('party-pop').classList.add('on');
+}
+function closePartyPop(){
+  document.getElementById('party-pop').classList.remove('on');
+}</script>
 
 <div id="quiz" style="display:none;position:fixed;inset:0;z-index:950;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:16px;">
   <div id="quiz-box" style="width:100%;max-width:500px;background:#141820;border:1px solid #2c3550;box-shadow:0 20px 60px rgba(0,0,0,.9);max-height:92vh;overflow-y:auto;position:relative;">
@@ -2442,6 +2857,35 @@ cv.addEventListener('dblclick', ()=>{ zoom=1; panX=0; panY=0; draw(); });</scrip
     <div style="padding:12px 16px 20px;display:flex;gap:8px;border-top:1px solid #1e2535">
       <button id="quiz-back" onclick="quizBack()" style="flex:0 0 80px;padding:10px;background:none;border:1px solid #2c3550;color:#5a6a88;font-size:12px;font-weight:700;cursor:pointer">← 戻る</button>
       <button id="quiz-next" onclick="quizNext()" style="flex:1;padding:10px;background:#3dd68c;border:none;color:#07090f;font-size:13px;font-weight:900;cursor:pointer">次へ →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 政党マップ ポップアップ ═══ -->
+<div id="party-pop">
+  <div class="ppc">
+    <button class="pp-xb" onclick="closePartyPop()">✕</button>
+    <div class="pp-bar" id="pp-bar"></div>
+    <div class="pp-head">
+      <div class="pp-name" id="pp-name"></div>
+      <div class="pp-badge" id="pp-badge"></div>
+      <div class="pp-summary-lbl">AI 要約</div>
+      <div class="pp-summary" id="pp-summary"></div>
+    </div>
+    <div class="pp-axes">
+      <div class="pp-axis">
+        <div class="pp-axis-lbl">左派 ↔ 右派</div>
+        <div class="pp-axis-val" id="pp-lr"></div>
+      </div>
+      <div style="width:1px;background:#1e2535"></div>
+      <div class="pp-axis">
+        <div class="pp-axis-lbl" id="pp-y-lbl">イシュー</div>
+        <div class="pp-axis-val" id="pp-yval"></div>
+      </div>
+    </div>
+    <div class="pp-ev">
+      <div class="pp-ev-lbl">根拠発言</div>
+      <div id="pp-ev-list"></div>
     </div>
   </div>
 </div>
