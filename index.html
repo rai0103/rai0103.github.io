@@ -285,6 +285,12 @@ body{display:flex;flex-direction:column;}
 #rpt-party{display:none;position:fixed;inset:0;z-index:800;align-items:center;justify-content:center;padding:16px;}
 #rpt-party.on{display:flex;}
 #rpt-party-bg{position:absolute;inset:0;background:rgba(0,0,0,.7);}
+#party-select{display:none;position:fixed;z-index:700;background:#141820;border:1px solid #c9a84c55;box-shadow:0 8px 30px rgba(0,0,0,.85);min-width:180px;max-width:240px;}
+#party-select.on{display:block;}
+.ps-title{font-size:10px;color:#5a6a88;padding:7px 12px 5px;letter-spacing:.08em;border-bottom:1px solid #1e2535;}
+.ps-item{padding:9px 14px;cursor:pointer;font-size:13px;font-weight:700;color:#dce4f0;display:flex;align-items:center;gap:8px;transition:background .1s;}
+.ps-item:hover{background:rgba(201,168,76,.1);}
+.ps-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -2477,11 +2483,14 @@ const my = (e.clientY - rect.top) * scaleY;
 
   // 政党マップモード
   if(typeof currentMode!=='undefined'&&currentMode==='party'){
-    const hit=partyHits.find(h=>Math.hypot(mx-h.cx,my-h.cy)<=h.r);
-    if(hit){
-      partyHlId=hit.party.id;
+    closePartySelect();
+    const phits=partyHits.filter(h=>Math.hypot(mx-h.cx,my-h.cy)<=h.r);
+    if(phits.length>1){
+      openPartySelect(phits,e.clientX,e.clientY);
+    } else if(phits.length===1){
+      partyHlId=phits[0].party.id;
       draw();
-      openPartyPop(hit.party);
+      openPartyPop(phits[0].party);
     } else {
       partyHlId=null;
       closePartyPop();
@@ -3061,6 +3070,7 @@ function setPartyMode(){
   document.getElementById('issue-row').classList.add('on');
   clrP();
   closePartyPop();
+  closePartySelect();
   partyHlId=null;
   zoom=1; panX=0; panY=0;
   draw();
@@ -3077,12 +3087,14 @@ function setPoliticianMode(){
   });
   document.getElementById('issue-row').classList.remove('on');
   closePartyPop();
+  closePartySelect();
   partyHlId=null;
   zoom=1; panX=0; panY=0;
   draw();
 }
 function onIssueChange(){
   closePartyPop();
+  closePartySelect();
   partyHlId=null;
   draw();
 }
@@ -3146,7 +3158,7 @@ function drawPartyMap(){
     const px2=tx2(party.x), py2=ty2(yv);
     const col=pc(party.fullName)||'#888';
     const hl=(party.id===partyHlId);
-    const baseR=8+Math.log((party.members?.total||0)+1)*6;
+    const baseR=10+((party.members?.total||0)/374)*25;
     const r=hl?baseR+4:baseR;
     const alpha=hl?1:(partyHlId?0.4:0.75);
 
@@ -3249,6 +3261,31 @@ function openPartyPop(party){
 }
 function closePartyPop(){
   document.getElementById('party-pop').classList.remove('on');
+}
+function openPartySelect(phits,cx,cy){
+  const el=document.getElementById('party-select');
+  const listEl=document.getElementById('party-select-list');
+  listEl.innerHTML=phits.map(h=>{
+    const col=pc(h.party.fullName)||'#888';
+    return `<div class="ps-item" onclick="selectPartyFromList('${h.party.id}')"><span class="ps-dot" style="background:${col}"></span>${h.party.name}</div>`;
+  }).join('');
+  const margin=8;
+  const sw=window.innerWidth, sh=window.innerHeight;
+  const ew=240, eh=phits.length*40+32;
+  el.style.left=Math.min(cx+margin,sw-ew-margin)+'px';
+  el.style.top=Math.min(cy+margin,sh-eh-margin)+'px';
+  el.classList.add('on');
+}
+function closePartySelect(){
+  document.getElementById('party-select').classList.remove('on');
+}
+function selectPartyFromList(partyId){
+  closePartySelect();
+  const party=PARTY_DATA.find(p=>p.id===partyId);
+  if(!party) return;
+  partyHlId=partyId;
+  draw();
+  openPartyPop(party);
 }
 
 /* ── 政党エビデンス投稿 ── */
@@ -3421,6 +3458,12 @@ async function postPartyToGitHubIssue(issueKey,speaker,quote,srcType,url){
     </div>
     <button class="pp-submit-btn" onclick="openPartyRpt()">+ 発言情報を投稿</button>
   </div>
+</div>
+
+<!-- 政党重なり選択ポップアップ -->
+<div id="party-select">
+  <div class="ps-title">政党を選択</div>
+  <div id="party-select-list"></div>
 </div>
 
 <!-- 政党エビデンス投稿モーダル -->
