@@ -2429,7 +2429,7 @@ const my = (e.clientY - rect.top) * scaleY;
 
   // 政党マップモード
   if(typeof currentMode!=='undefined'&&currentMode==='party'){
-    const hit=partyHits.find(h=>Math.hypot(mx-h.cx,my-h.cy)<=h.r);
+    const hit=partyHits.reduce((best,h)=>{const d=Math.hypot(mx-h.cx,my-h.cy);if(d>h.r)return best;return!best||d<best.d?{h,d}:best;},null)?.h;
     if(hit){
       const p=hit.party; const col=pc(p.fullName)||'#888';
       document.getElementById('tip-name').textContent=p.name;
@@ -3162,7 +3162,7 @@ function drawPartyMap(){
     const r=hl?baseR+4:baseR;
     const alpha=hl?1:(partyHlId?0.4:0.75);
 
-    partyHits.push({party,cx:px2,cy:py2,r:r+10});
+    partyHits.push({party,cx:px2,cy:py2,r:Math.min(r+10,24)});
 
     if(hl){
       const g=ctx.createRadialGradient(px2,py2,0,px2,py2,r*3.5);
