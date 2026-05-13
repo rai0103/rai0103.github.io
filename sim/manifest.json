@@ -1,0 +1,12 @@
+{
+  "name": "未来投資シミュレーター — 戦略バックテスト",
+  "short_name": "投資シミュ",
+  "description": "過去40年(1985-2026)の日次データで投資戦略を検証。Cash/SP500/Nasdaq100/Goldの4資産で3パターン比較。",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0f1419",
+  "theme_color": "#1a1a1a",
+  "orientation": "any",
+  "lang": "ja",
+  "icons": []
+}
