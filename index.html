@@ -2605,6 +2605,22 @@ const ISSUES = [
   {key:'judicial',    label:'冤罪・司法制度改革',    yPos:'改革推進',      yNeg:'現状維持',      xPos:'現行制度派',    xNeg:'司法改革派'},
 ];
 
+const PARTY_POINTS = {
+  defense: {
+    party_ldp:     ['防衛費GDP比2%増額（5年43兆円）決定','敵基地攻撃能力の保有・トマホーク取得推進','専守防衛の範囲内で抑止力を強化'],
+    party_komeito: ['防衛費増額は一定容認・財源論に慎重','専守防衛堅持と外交による紛争防止','際限ない軍拡への歯止め役を担う'],
+    party_rikken:  ['防衛費倍増に反対（財源・プロセス問題）','憲法9条の維持を堅持','安保政策の国会プロセス透明化を要求'],
+    party_ishin:   ['防衛力強化は支持・財源の透明性を要求','「身を切る改革」で無駄な防衛調達を精査','自衛隊の憲法明記を条件に改憲論議へ'],
+    party_dpfp:    ['現実的な防衛力増強を支持・国民への説明重視','防衛費増額の財源論を与野党で議論','経済成長との両立で防衛基盤を強化'],
+    party_jcp:     ['軍事費2倍化は「憲法違反の大軍拡」','GDP比1%以下への抑制を主張','外交・対話による平和構築を訴える'],
+    party_reiwa:   ['軍事費2倍化に反対・生活支援に回せ','防衛費増額より国民の生活を優先','大規模な軍拡路線を根本から否定'],
+    party_sdp:     ['防衛費の大幅増額に反対','在日米軍基地の縮小・撤去を要求','軍事力によらない平和外交を推進'],
+    party_sansei:  ['防衛費大幅増額を強く支持','自衛隊の憲法明記・国防軍設置を主張','「自分の国は自分で守る」自主防衛確立'],
+    party_hoshuto: ['自衛力の大幅増強・防衛費増額を支持','核武装の議論の必要性を主張','独自防衛能力の確立を最重要課題とする'],
+  },
+  // END_PARTY_POINTS
+};
+
 const PARTY_DATA = [
   {
     id:'party_ldp', name:'自民党', fullName:'自由民主党',
@@ -4005,7 +4021,7 @@ function showIssueOverlay(){
   list.innerHTML=PARTY_DATA.map(party=>{
     const col=pc(party.fullName)||'#888';
     const s=party.summary&&(party.summary[issueKey]||party.summary.default)||{};
-    let pts=s.points;
+    let pts=(PARTY_POINTS[issueKey]||{})[party.id]||s.points;
     if(!pts&&s.claim){
       const c=s.claim;
       pts=[c.length>45?c.slice(0,45)+'…':c];
