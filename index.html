@@ -68,7 +68,7 @@ body{display:flex;flex-direction:column;}
 /* THE KEY: canvas wrapper fills remaining flex space.
    Canvas is inside it with explicit px size set by JS.
    No position:absolute — canvas is a normal block element. */
-#ma{flex:1 1 0;min-height:0;overflow:hidden;margin:8px 12px 0;}
+#ma{flex:1 1 0;min-height:0;overflow:hidden;margin:8px 12px 0;position:relative;}
 #cv{display:block;cursor:pointer;}
 
 #st{flex:0 0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:5px 12px;border-top:1px solid #1e2535;font-size:10px;color:#5a6a88;gap:4px;}
@@ -291,6 +291,30 @@ body{display:flex;flex-direction:column;}
 .ps-item{padding:9px 14px;cursor:pointer;font-size:13px;font-weight:700;color:#dce4f0;display:flex;align-items:center;gap:8px;transition:background .1s;}
 .ps-item:hover{background:rgba(201,168,76,.1);}
 .ps-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* ═══ イシュー主張オーバーレイ ═══ */
+#issue-overlay{display:none;position:absolute;inset:0;z-index:300;background:rgba(0,0,0,.6);justify-content:center;}
+#issue-overlay.on{display:flex;}
+#iov-inner{display:flex;flex-direction:column;width:100%;max-width:500px;height:100%;background:#141820;border-left:1px solid #2c3550;border-right:1px solid #2c3550;overflow:hidden;}
+#iov-header{background:#0d0f18;border-bottom:1px solid #2c3550;display:flex;align-items:center;gap:8px;padding:10px 14px;flex-shrink:0;}
+#iov-title{font-size:14px;font-weight:900;color:#c9a84c;flex:1;letter-spacing:.04em;}
+#iov-close{width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.5);border:1px solid #2c3550;color:#888;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#iov-close:hover{color:#fff;border-color:#aaa;}
+#iov-list{overflow-y:auto;flex:1;padding:8px 10px;}
+#iov-list::-webkit-scrollbar{width:3px;}
+#iov-list::-webkit-scrollbar-thumb{background:#2c3550;}
+.iov-card{display:flex;align-items:stretch;background:#0e1118;border:1px solid #1e2535;margin-bottom:5px;cursor:pointer;transition:background .12s,border-color .12s;overflow:hidden;}
+.iov-card:hover{background:#1a2030;border-color:#4a5878;}
+.iov-accent{width:4px;flex-shrink:0;}
+.iov-body{flex:1;padding:8px 11px 9px;min-width:0;}
+.iov-party-name{font-size:12px;font-weight:900;color:#fff;margin-bottom:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.iov-badge{font-size:9px;font-weight:700;padding:1px 6px;}
+.iov-points{list-style:none;display:flex;flex-direction:column;gap:2px;}
+.iov-points li{font-size:11px;color:#b0bcd0;line-height:1.55;padding-left:14px;position:relative;}
+.iov-points li::before{content:'▸';position:absolute;left:0;color:#c9a84c;font-size:9px;top:2px;}
+#iov-footer{padding:8px 14px 10px;border-top:1px solid #1e2535;text-align:center;flex-shrink:0;background:#0a0c12;}
+.iov-close-link{background:none;border:none;color:#5a6a88;font-size:11px;cursor:pointer;letter-spacing:.04em;transition:color .15s;}
+.iov-close-link:hover{color:#c9a84c;}
 </style>
 </head>
 <body>
@@ -387,7 +411,21 @@ body{display:flex;flex-direction:column;}
   <button class="fb" data-p="れいわ新選組"      onclick="setF('れいわ新選組',this)">れいわ</button>
   <button class="fb" data-p="日本保守党"        onclick="setF('日本保守党',this)">保守</button>
 </div>
-<div id="ma"><canvas id="cv"></canvas></div>
+<div id="ma">
+  <canvas id="cv"></canvas>
+  <div id="issue-overlay" onclick="closeIssueOverlay()">
+    <div id="iov-inner" onclick="event.stopPropagation()">
+      <div id="iov-header">
+        <span id="iov-title"></span>
+        <button id="iov-close" onclick="closeIssueOverlay()">✕</button>
+      </div>
+      <div id="iov-list"></div>
+      <div id="iov-footer">
+        <button class="iov-close-link" onclick="closeIssueOverlay()">閉じてマップ全体を見る　→</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="st"><div id="sl"></div><div style="display:flex;align-items:center;gap:8px;white-space:nowrap;">
   <span id="zm" style="color:#c9a84c;font-weight:700;font-size:11px;"></span>
   <span style="color:#5a6a88">ホイール/ピンチ拡大　ドラッグ移動　ダブルクリックでリセット</span>
@@ -3740,6 +3778,7 @@ function setPartyMode(){
   partyHlId=null;
   zoom=1; panX=0; panY=0;
   draw();
+  showIssueOverlay();
 }
 function setPoliticianMode(){
   currentMode='politician';
@@ -3754,6 +3793,7 @@ function setPoliticianMode(){
   document.getElementById('issue-row').classList.remove('on');
   closePartyPop();
   closePartySelect();
+  closeIssueOverlay();
   partyHlId=null;
   zoom=1; panX=0; panY=0;
   draw();
@@ -3763,6 +3803,7 @@ function onIssueChange(){
   closePartySelect();
   partyHlId=null;
   draw();
+  showIssueOverlay();
 }
 
 /* ── 政党マップ描画 ── */
@@ -3947,6 +3988,46 @@ function closePartySelect(){
 }
 function selectPartyFromList(partyId){
   closePartySelect();
+  const party=PARTY_DATA.find(p=>p.id===partyId);
+  if(!party) return;
+  partyHlId=partyId;
+  draw();
+  openPartyPop(party);
+}
+
+/* ── イシュー主張オーバーレイ ── */
+function showIssueOverlay(){
+  if(currentMode!=='party') return;
+  const issueKey=document.getElementById('issue-sel').value;
+  const issue=ISSUES.find(i=>i.key===issueKey)||ISSUES[0];
+  document.getElementById('iov-title').textContent='【'+issue.label+'】各党の主張';
+  const list=document.getElementById('iov-list');
+  list.innerHTML=PARTY_DATA.map(party=>{
+    const col=pc(party.fullName)||'#888';
+    const s=party.summary&&(party.summary[issueKey]||party.summary.default)||{};
+    let pts=s.points;
+    if(!pts&&s.claim){
+      const c=s.claim;
+      pts=[c.length>45?c.slice(0,45)+'…':c];
+    }
+    const ptsHtml=pts&&pts.length
+      ?'<ul class="iov-points">'+pts.map(p=>`<li>${p}</li>`).join('')+'</ul>'
+      :'<ul class="iov-points"><li style="color:#5a6a88">データなし</li></ul>';
+    return `<div class="iov-card" onclick="selectPartyFromOverlay('${party.id}')">
+      <div class="iov-accent" style="background:${col}"></div>
+      <div class="iov-body">
+        <div class="iov-party-name">${party.name}<span class="iov-badge" style="background:${col}22;border:1px solid ${col}55;color:${col}">${party.fullName}</span></div>
+        ${ptsHtml}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('issue-overlay').classList.add('on');
+}
+function closeIssueOverlay(){
+  document.getElementById('issue-overlay').classList.remove('on');
+}
+function selectPartyFromOverlay(partyId){
+  closeIssueOverlay();
   const party=PARTY_DATA.find(p=>p.id===partyId);
   if(!party) return;
   partyHlId=partyId;
