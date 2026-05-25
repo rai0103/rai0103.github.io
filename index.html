@@ -204,6 +204,12 @@ body{display:flex;flex-direction:column;}
 .tb{padding:3px 10px;font-size:11px;background:none;border:1px solid #2c3550;color:#5a6a88;cursor:pointer;border-radius:2px;white-space:nowrap;transition:all .15s;}
 .tb:hover{border-color:#dce4f0;color:#dce4f0;}
 .tb.on{background:rgba(74,127,232,.12);border-color:#4a7fe8;color:#4a7fe8;}
+/* イシュー別ポジションタブ */
+#politician-issue-row{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;padding-bottom:4px;}
+#politician-issue-row::-webkit-scrollbar{display:none;}
+.pi-btn{padding:3px 8px;font-size:10px;background:none;border:1px solid #2c3550;color:#5a6a88;cursor:pointer;border-radius:2px;white-space:nowrap;transition:all .15s;flex-shrink:0;}
+.pi-btn:hover{border-color:#c9a84c88;color:#c9a84c88;}
+.pi-btn.on{background:rgba(201,168,76,.12);border-color:#c9a84c;color:#c9a84c;}
 
 /* ホバーツールチップ */
 #tip{position:fixed;pointer-events:none;z-index:500;background:#141820;border:1px solid #2c3550;box-shadow:0 6px 24px rgba(0,0,0,.8);padding:8px 12px;min-width:120px;max-width:200px;display:none;}
@@ -374,6 +380,25 @@ body{display:flex;flex-direction:column;}
   <button class="tb"    data-a="70s"  onclick="setA('70s',this)">70代〜</button>
   <button class="tb"    data-a="unknown" onclick="setA('unknown',this)" style="margin-left:8px;opacity:0.7">未登録</button>
 </div>
+<div id="politician-issue-row" class="tab-row">
+  <span class="tl" style="flex-shrink:0">イシュー:</span>
+  <button class="pi-btn on" data-pi="all"          onclick="setIssue(null)">総合マップ</button>
+  <button class="pi-btn"    data-pi="defense"       onclick="setIssue('defense')">防衛</button>
+  <button class="pi-btn"    data-pi="spy"           onclick="setIssue('spy')">スパイ法</button>
+  <button class="pi-btn"    data-pi="surname"       onclick="setIssue('surname')">夫婦別姓</button>
+  <button class="pi-btn"    data-pi="imperial"      onclick="setIssue('imperial')">皇室</button>
+  <button class="pi-btn"    data-pi="middleeast"    onclick="setIssue('middleeast')">中東</button>
+  <button class="pi-btn"    data-pi="ukraine"       onclick="setIssue('ukraine')">対露</button>
+  <button class="pi-btn"    data-pi="constitution"  onclick="setIssue('constitution')">改憲9条</button>
+  <button class="pi-btn"    data-pi="nuclear"       onclick="setIssue('nuclear')">原発</button>
+  <button class="pi-btn"    data-pi="tax"           onclick="setIssue('tax')">消費税</button>
+  <button class="pi-btn"    data-pi="immigration"   onclick="setIssue('immigration')">移民</button>
+  <button class="pi-btn"    data-pi="china"         onclick="setIssue('china')">対中</button>
+  <button class="pi-btn"    data-pi="pension"       onclick="setIssue('pension')">年金</button>
+  <button class="pi-btn"    data-pi="okinawa"       onclick="setIssue('okinawa')">沖縄</button>
+  <button class="pi-btn"    data-pi="history"       onclick="setIssue('history')">歴史認識</button>
+  <button class="pi-btn"    data-pi="judicial"      onclick="setIssue('judicial')">司法改革</button>
+</div>
 <div id="issue-row">
   <span class="tl" style="white-space:nowrap">イシュー:</span>
   <div id="issue-sel-wrap">
@@ -456,8 +481,9 @@ body{display:flex;flex-direction:column;}
     <div class="pco">
       <div class="pcol"><div class="pclb">保守↔リベラル</div><div class="pcv" id="px2" style="font-size:11px;font-family:sans-serif;font-weight:700;"></div></div>
       <div style="width:1px;background:#1e2535"></div>
-      <div class="pcol"><div class="pclb">タカ↔ハト派</div><div class="pcv" id="py2" style="font-size:11px;font-family:sans-serif;font-weight:700;"></div></div>
+      <div class="pcol"><div class="pclb" id="pco-y-lbl">タカ↔ハト派</div><div class="pcv" id="py2" style="font-size:11px;font-family:sans-serif;font-weight:700;"></div></div>
     </div>
+    <div id="pi-src-info" style="display:none;padding:4px 14px 2px;"></div>
     <button class="pak" id="pa"><span>詳細チャートを見る</span><span>→</span></button>
   </div>
 </div>
@@ -1401,6 +1427,7 @@ const DATA=[
   {id:'p_福島瑞穂',name:'福島瑞穂',en:'',age:69,party:'社会民主党',house:'参議院',area:'比例代表',x:-2.6,y:-7.9,s:{security:2,economy:2,china:3,russia:2,okinawa:1,nuclear:1,imperial:2,surname:1,gender:2},ev:[{c:'日米安保・防衛',q:'安保3文書は憲法違反だ。敵基地攻撃能力の保有は専守防衛の逸脱であり、断固反対する',src:'参議院本会議',d:'2022年'},{c:'経済政策',q:'消費税廃止・最低賃金大幅引き上げ・非正規労働者の待遇改善こそ必要な経済政策だ',src:'社会民主党政策',d:'2024年'},{c:'対中政策',q:'対話と外交を通じて中国との関係を改善する。軍事的緊張を高める政策には反対だ',src:'参議院外交防衛委員会',d:'2023年'},{c:'対ロ政策',q:'ロシアのウクライナ侵攻は断固非難する。外交的解決と国際法の遵守を求める',src:'参議院本会議',d:'2022年'},{c:'沖縄基地問題',q:'辺野古移設反対。沖縄の民意を尊重し、普天間基地の無条件返還を求める',src:'参議院本会議',d:'2023年'},{c:'原発政策',q:'原発は即時廃止すべきだ。再生可能エネルギーへの転換を一刻も早く進める',src:'参議院環境委員会',d:'2023年'},{c:'皇室制度',q:'女性天皇・女系天皇を認めるべきだ。性差別なく安定的な皇位継承を実現すべき',src:'参議院内閣委員会',d:'2024年'},{c:'夫婦別姓',q:'選択的夫婦別姓は30年来の懸案だ。個人の尊厳と人権の観点から一刻も早く実現すべきだ',src:'参議院法務委員会',d:'2024年'},{c:'ジェンダー政策',q:'同性婚を法制化すべきだ。すべての人が平等に結婚の権利を持てる社会にする',src:'社会民主党政策',d:'2024年'}]}
 ];
 let fP='all', fH='all', fA='all', hlId=null, popId=null, ddL=[], ddI=-1, hits=[];
+let currentPoliticianIssue=null;
 /* zoom/pan state */
 let zoom=1, panX=0, panY=0;
 let dragging=false, dragStartX=0, dragStartY=0, panStartX=0, panStartY=0, dragMoved=false;
@@ -1414,6 +1441,7 @@ const MIN_ZOOM=0.5, MAX_ZOOM=6;
 */
 function draw(){
   if(typeof currentMode!=='undefined'&&currentMode==='party'){drawPartyMap();return;}
+  if(currentPoliticianIssue!==null){drawPoliticianIssueMap(currentPoliticianIssue);return;}
   const ma=document.getElementById('ma');
   let W=ma.clientWidth;
   let H=ma.clientHeight;
@@ -1530,15 +1558,16 @@ function draw(){
   if(zmEl) zmEl.textContent=zoom===1?'':`×${zoom.toFixed(1)}`;
 }
 
-function dot(ctx,p,hl,tx,ty,W,H){
+function dot(ctx,p,hl,tx,ty,W,H,overrideY,overrideAlpha){
   const col=pc(p.party);
-  const px=tx(p.x), py=ty(p.y);
+  const dataY = overrideY!==undefined ? overrideY : p.y;
+  const px=tx(p.x), py=ty(dataY);
   // 画面外はスキップ
   if(px<-20||px>W+20||py<-20||py>H+20) return;
 
   const baseR = W<420?4:5;
   const r = hl ? 9 : Math.max(2, baseR * Math.min(zoom, 1.5));
-  const alpha=hl?1:(hlId?0.3:0.85);
+  const alpha=hl?1:(overrideAlpha!==undefined?overrideAlpha:(hlId?0.3:0.85));
 
   hits.push({p,cx:px,cy:py,r:r+8});
 
@@ -1808,7 +1837,26 @@ function openPop(p,e){
   }
   const fv=v=>(v>0?'+':'')+v;
   const ex=document.getElementById('px2'); ex.textContent=xLabel(p.x); ex.style.color=col;
-  const ey=document.getElementById('py2'); ey.textContent=yLabel(p.y); ey.style.color=col;
+  const yLblEl=document.getElementById('pco-y-lbl');
+  const srcInfoEl=document.getElementById('pi-src-info');
+  if(currentPoliticianIssue!==null&&typeof ISSUES!=='undefined'){
+    const issue=ISSUES.find(i=>i.key===currentPoliticianIssue);
+    const {y,source}=getPoliticianIssuePos(p,currentPoliticianIssue);
+    if(yLblEl) yLblEl.textContent=issue?issue.label:'イシュー';
+    const ey=document.getElementById('py2'); ey.textContent=getIssueYLabel(issue,y); ey.style.color=col;
+    if(srcInfoEl){
+      srcInfoEl.style.display='block';
+      if(source==='personal'){
+        srcInfoEl.innerHTML=`<span style="background:rgba(201,168,76,.15);border:1px solid #c9a84c55;color:#c9a84c;padding:2px 8px;border-radius:2px;font-size:9px">📌 個人発言由来</span>`;
+      } else {
+        srcInfoEl.innerHTML=`<span style="background:rgba(90,106,136,.15);border:1px solid #3a456055;color:#5a6a88;padding:2px 8px;border-radius:2px;font-size:9px">🏛️ 政党スタンス由来（個人発言未取得）</span>`;
+      }
+    }
+  } else {
+    if(yLblEl) yLblEl.textContent='タカ↔ハト派';
+    const ey=document.getElementById('py2'); ey.textContent=yLabel(p.y); ey.style.color=col;
+    if(srcInfoEl) srcInfoEl.style.display='none';
+  }
   const pa=document.getElementById('pa'); pa.style.color=col; pa.onclick=()=>{clrP();openBF(p.id);};
   document.getElementById('pop').classList.add('on');
 }
@@ -1862,6 +1910,145 @@ function setH(house,btn){
 function setA(age,btn){
   fA=age; document.querySelectorAll('[data-a]').forEach(b=>b.classList.toggle('on',b.dataset.a===age));
   draw();
+}
+
+/* ════ イシュー別ポジション ════ */
+function evMatchesIssue(ev,issueKey){
+  const c=(ev.c||'').toLowerCase();
+  switch(issueKey){
+    case 'defense': case 'constitution':
+      return c.includes('安保')||c.includes('防衛')||c.includes('憲法');
+    case 'spy':
+      return c.includes('スパイ')||c.includes('安保')||c.includes('安全保障')||c.includes('防衛');
+    case 'nuclear':   return c.includes('原発')||c.includes('原子力')||c.includes('エネルギー');
+    case 'surname':   return c.includes('別姓')||c.includes('夫婦');
+    case 'imperial':  return c.includes('皇室')||c.includes('天皇');
+    case 'china':     return c.includes('中国')||c.includes('対中');
+    case 'ukraine':   return c.includes('ロシア')||c.includes('対ロ')||c.includes('ウクライナ');
+    case 'okinawa':   return c.includes('沖縄')||c.includes('基地');
+    case 'tax':       return c.includes('消費税')||c.includes('財政')||c.includes('経済');
+    case 'pension':   return c.includes('年金')||c.includes('社会保障');
+    case 'immigration': return c.includes('移民')||c.includes('外国人')||c.includes('入管');
+    case 'history':   return c.includes('靖国')||c.includes('歴史')||c.includes('談話');
+    case 'judicial':  return c.includes('司法')||c.includes('冤罪')||c.includes('再審');
+    case 'middleeast': return c.includes('中東')||c.includes('イラン')||c.includes('ガザ');
+    default: return false;
+  }
+}
+function politicianHasPersonalEv(p,issueKey){
+  return (p.ev||[]).some(ev=>!ev.party&&evMatchesIssue(ev,issueKey));
+}
+function getIssueYLabel(issue,y){
+  if(!issue) return '';
+  if(Math.abs(y)<1.5) return '中立的';
+  return y>0 ? issue.yPos : issue.yNeg;
+}
+function getPoliticianIssuePos(p,issueKey){
+  const mapping=ISSUE_TO_CAT[issueKey];
+  const hasPersonal=politicianHasPersonalEv(p,issueKey);
+  if(mapping&&mapping.cat&&p.s[mapping.cat]!=null){
+    const s=p.s[mapping.cat];
+    const raw=(s-5.5)/4.5*10;
+    const y=mapping.flip?-raw:raw;
+    return{y,source:hasPersonal?'personal':'party'};
+  }
+  const partyData=p.party==='中道改革連合'
+    ?PARTY_DATA.find(pd=>pd.id==='party_rikken')
+    :PARTY_DATA.find(pd=>pd.fullName===p.party||pd.name===p.party);
+  const y=partyData?(partyData.pos[issueKey]??0):0;
+  return{y,source:hasPersonal?'personal':'party'};
+}
+function setIssue(key){
+  currentPoliticianIssue=key;
+  document.querySelectorAll('.pi-btn').forEach(b=>b.classList.toggle('on',b.dataset.pi===(key||'all')));
+  clrP(); hlId=null;
+  zoom=1; panX=0; panY=0;
+  draw();
+}
+function drawPoliticianIssueMap(issueKey){
+  const issue=ISSUES.find(i=>i.key===issueKey)||ISSUES[0];
+  const ma=document.getElementById('ma');
+  let W=ma.clientWidth, H=ma.clientHeight;
+  if(!H){
+    const els=['hdr','notice','sa','fa','st'];
+    let used=0;
+    els.forEach(id=>{const e=document.getElementById(id);if(e)used+=e.offsetHeight||0;});
+    document.querySelectorAll('.tab-row').forEach(e=>{used+=e.offsetHeight||0;});
+    H=Math.max(300,(window.innerHeight||800)-used-20);
+    ma.style.height=H+'px';
+  }
+  if(!W||!H){requestAnimationFrame(()=>drawPoliticianIssueMap(issueKey));return;}
+  const cv=document.getElementById('cv');
+  cv.width=W; cv.height=H;
+  cv.style.width=W+'px'; cv.style.height=H+'px';
+  const ctx=cv.getContext('2d');
+  const SC=Math.min(W,H)/2/10*0.84;
+  const tx=v=>W/2+(v*SC+panX)*zoom;
+  const ty=v=>H/2+(-v*SC+panY)*zoom;
+  const cx0=tx(0), cy0=ty(0);
+  ctx.fillStyle='#07090f'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(232,53,74,.05)';  ctx.fillRect(cx0,0,W-cx0,cy0);
+  ctx.fillStyle='rgba(201,168,76,.02)'; ctx.fillRect(0,0,cx0,cy0);
+  ctx.fillStyle='rgba(74,127,232,.05)'; ctx.fillRect(0,cy0,cx0,H-cy0);
+  ctx.fillStyle='rgba(80,80,120,.02)';  ctx.fillRect(cx0,cy0,W-cx0,H-cy0);
+  ctx.strokeStyle='#1e2535'; ctx.lineWidth=0.5;
+  for(let v=-10;v<=10;v+=2){
+    if(!v) continue;
+    const gx=tx(v),gy=ty(v);
+    if(gx>0&&gx<W){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    if(gy>0&&gy<H){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+  }
+  ctx.strokeStyle='#3a4560'; ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(0,cy0);ctx.lineTo(W,cy0);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx0,0);ctx.lineTo(cx0,H);ctx.stroke();
+  const fs=W<420?11:13;
+  ctx.font='bold '+fs+'px sans-serif';
+  ctx.fillStyle='#e8354a'; ctx.textAlign='center'; ctx.textBaseline='top';    ctx.fillText(issue.yPos,W/2,4);
+  ctx.fillStyle='#4a7fe8'; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText(issue.yNeg,W/2,H-2);
+  ctx.fillStyle='#e8354a'; ctx.textAlign='right';  ctx.textBaseline='middle'; ctx.fillText('保守',W-4,H/2-fs-4);
+  ctx.fillStyle='#4a7fe8'; ctx.textAlign='left';   ctx.textBaseline='middle'; ctx.fillText('リベラル',4,H/2-fs-4);
+  ctx.font='bold '+(W<420?9:10)+'px sans-serif';
+  ctx.fillStyle='rgba(201,168,76,0.65)'; ctx.textAlign='right'; ctx.textBaseline='top';
+  ctx.fillText('【'+issue.label+'】',W-8,4);
+  hits=[];
+  const show=DATA.filter(p=>{
+    if(fP!=='all'&&p.party!==fP) return false;
+    if(fH!=='all'&&p.house!==fH) return false;
+    if(fA!=='all'){
+      const age=p.age||-1, unknown=(age<0);
+      if(fA==='unknown') return unknown;
+      if(unknown) return false;
+      if(fA==='30s'&&age>=40) return false;
+      if(fA==='40s'&&(age<40||age>=50)) return false;
+      if(fA==='50s'&&(age<50||age>=60)) return false;
+      if(fA==='60s'&&(age<60||age>=70)) return false;
+      if(fA==='70s'&&age<70) return false;
+    }
+    return true;
+  });
+  show.filter(p=>p.id!==hlId).forEach(p=>{
+    const {y,source}=getPoliticianIssuePos(p,issueKey);
+    dot(ctx,p,false,tx,ty,W,H,y,source==='personal'?0.85:0.35);
+  });
+  if(hlId){
+    const hp=DATA.find(p=>p.id===hlId);
+    if(hp&&show.includes(hp)){
+      const {y}=getPoliticianIssuePos(hp,issueKey);
+      dot(ctx,hp,true,tx,ty,W,H,y,undefined);
+    }
+  }
+  const cnt={}; show.forEach(p=>cnt[p.party]=(cnt[p.party]||0)+1);
+  const total=show.length;
+  const legend=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([p,n])=>
+    `<div class="sci"><div class="scd" style="background:${pc(p)}"></div><span style="color:${pc(p)};font-weight:700">${p} ${n}</span></div>`).join('');
+  const personalCount=show.filter(p=>politicianHasPersonalEv(p,issueKey)).length;
+  const partyCount=total-personalCount;
+  document.getElementById('sl').innerHTML=
+    `<div class="sci" style="margin-right:6px;padding-right:6px;border-right:1px solid #2c3550"><span style="color:#c9a84c;font-weight:900">${total}名表示中</span></div>`+
+    legend+
+    `<div class="sci" style="margin-left:8px;padding-left:8px;border-left:1px solid #2c3550"><span style="font-size:9px">⬤ 個人発言 <b style="color:#c9a84c">${personalCount}</b>名　<span style="opacity:0.4">⬤</span> 政党スタンス <b style="color:#5a6a88">${partyCount}</b>名</span></div>`;
+  const zmEl=document.getElementById('zm');
+  if(zmEl) zmEl.textContent=zoom===1?'':`×${zoom.toFixed(1)}`;
 }
 
 /* ════ BUTTERFLY ════ */
@@ -2493,7 +2680,14 @@ const my = (e.clientY - rect.top) * scaleY;
     const tp = document.getElementById('tip-party');
     tp.textContent = p.party;
     tp.style.cssText = `background:${col}22;border:1px solid ${col}55;color:${col}`;
-    document.getElementById('tip-pos').textContent = `${xLabel(p.x)}  /  ${yLabel(p.y)}`;
+    if(currentPoliticianIssue!==null&&typeof ISSUES!=='undefined'){
+      const issue=ISSUES.find(i=>i.key===currentPoliticianIssue);
+      const {y,source}=getPoliticianIssuePos(p,currentPoliticianIssue);
+      const srcTxt=source==='personal'?'📌個人':'🏛️政党';
+      document.getElementById('tip-pos').textContent=`${xLabel(p.x)}  /  ${getIssueYLabel(issue,y)}（${srcTxt}）`;
+    } else {
+      document.getElementById('tip-pos').textContent = `${xLabel(p.x)}  /  ${yLabel(p.y)}`;
+    }
     const tx = Math.min(e.clientX + 12, window.innerWidth - 220);
     const ty = Math.max(e.clientY - 80, 4);
     tip.style.left = tx + 'px';
@@ -2604,6 +2798,25 @@ const ISSUES = [
   {key:'history',     label:'歴史認識・靖国参拝',    yPos:'参拝推進',      yNeg:'参拝反対',      xPos:'保守歴史観派',  xNeg:'国際協調派'},
   {key:'judicial',    label:'冤罪・司法制度改革',    yPos:'改革推進',      yNeg:'現状維持',      xPos:'現行制度派',    xNeg:'司法改革派'},
 ];
+
+/* イシューキー → CATSキー マッピング（flip=trueはCATSの方向を逆転） */
+const ISSUE_TO_CAT = {
+  defense:      {cat:'security',  flip:false},
+  spy:          {cat:'security',  flip:false},
+  constitution: {cat:'security',  flip:false},
+  ukraine:      {cat:'russia',    flip:false},
+  nuclear:      {cat:'nuclear',   flip:false},
+  china:        {cat:'china',     flip:false},
+  okinawa:      {cat:'okinawa',   flip:false},
+  imperial:     {cat:'imperial',  flip:true},
+  surname:      {cat:'surname',   flip:true},
+  tax:          {cat:'economy',   flip:true},
+  pension:      {cat:'economy',   flip:true},
+  middleeast:   {cat:null},
+  immigration:  {cat:null},
+  history:      {cat:null},
+  judicial:     {cat:null},
+};
 
 const PARTY_POINTS = {
   defense: {
@@ -3954,6 +4167,7 @@ function setPartyMode(){
   document.querySelectorAll('.tab-row').forEach(row=>{
     if(row.querySelector('[data-a]')) row.style.display='none';
   });
+  document.getElementById('politician-issue-row').style.display='none';
   document.getElementById('issue-row').classList.add('on');
   clrP();
   closePartyPop();
@@ -3973,6 +4187,7 @@ function setPoliticianMode(){
   document.querySelectorAll('.tab-row').forEach(row=>{
     if(row.querySelector('[data-a]')) row.style.display='';
   });
+  document.getElementById('politician-issue-row').style.display='';
   document.getElementById('issue-row').classList.remove('on');
   closePartyPop();
   closePartySelect();
