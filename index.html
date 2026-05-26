@@ -1916,22 +1916,66 @@ function setA(age,btn){
 function evMatchesIssue(ev,issueKey){
   const c=(ev.c||'').toLowerCase();
   switch(issueKey){
-    case 'defense': case 'constitution':
-      return c.includes('安保')||c.includes('防衛')||c.includes('憲法');
+    case 'defense':
+      return c.includes('安保')||c.includes('防衛')||c.includes('自衛隊')||
+             c.includes('防衛費')||c.includes('防衛予算')||c.includes('敵基地')||
+             c.includes('専守防衛')||c.includes('安全保障')||c.includes('反撃能力');
+    case 'constitution':
+      return c.includes('憲法')||c.includes('9条')||c.includes('改憲')||
+             c.includes('護憲')||c.includes('憲法改正')||c.includes('緊急事態条項')||
+             c.includes('安保')||c.includes('防衛');
     case 'spy':
-      return c.includes('スパイ')||c.includes('安保')||c.includes('安全保障')||c.includes('防衛');
-    case 'nuclear':   return c.includes('原発')||c.includes('原子力')||c.includes('エネルギー');
-    case 'surname':   return c.includes('別姓')||c.includes('夫婦');
-    case 'imperial':  return c.includes('皇室')||c.includes('天皇');
-    case 'china':     return c.includes('中国')||c.includes('対中');
-    case 'ukraine':   return c.includes('ロシア')||c.includes('対ロ')||c.includes('ウクライナ');
-    case 'okinawa':   return c.includes('沖縄')||c.includes('基地');
-    case 'tax':       return c.includes('消費税')||c.includes('財政')||c.includes('経済');
-    case 'pension':   return c.includes('年金')||c.includes('社会保障');
-    case 'immigration': return c.includes('移民')||c.includes('外国人')||c.includes('入管');
-    case 'history':   return c.includes('靖国')||c.includes('歴史')||c.includes('談話');
-    case 'judicial':  return c.includes('司法')||c.includes('冤罪')||c.includes('再審');
-    case 'middleeast': return c.includes('中東')||c.includes('イラン')||c.includes('ガザ');
+      return c.includes('スパイ')||c.includes('安保')||c.includes('安全保障')||
+             c.includes('防衛')||c.includes('機密保護')||c.includes('諜報')||
+             c.includes('情報機関')||c.includes('情報漏洩')||c.includes('クリアランス');
+    case 'nuclear':
+      return c.includes('原発')||c.includes('原子力')||c.includes('エネルギー')||
+             c.includes('再エネ')||c.includes('再生可能エネルギー')||c.includes('脱原発')||
+             c.includes('核燃料')||c.includes('核廃棄物')||c.includes('gx');
+    case 'surname':
+      return c.includes('別姓')||c.includes('夫婦')||c.includes('選択的夫婦別姓')||
+             c.includes('夫婦同氏')||c.includes('氏制度')||c.includes('家族の絆')||
+             c.includes('姓名')||c.includes('改姓')||c.includes('旧姓');
+    case 'imperial':
+      return c.includes('皇室')||c.includes('天皇')||c.includes('皇位継承')||
+             c.includes('女系')||c.includes('女性天皇')||c.includes('旧宮家')||
+             c.includes('男系')||c.includes('典範');
+    case 'china':
+      return c.includes('中国')||c.includes('対中')||c.includes('中共')||
+             c.includes('台湾')||c.includes('尖閣')||c.includes('ウイグル')||
+             c.includes('香港')||c.includes('中国共産党');
+    case 'ukraine':
+      return c.includes('ロシア')||c.includes('対ロ')||c.includes('ウクライナ')||
+             c.includes('プーチン')||c.includes('ゼレンスキー')||c.includes('nato')||
+             c.includes('侵攻')||c.includes('侵略');
+    case 'okinawa':
+      return c.includes('沖縄')||c.includes('基地')||c.includes('辺野古')||
+             c.includes('普天間')||c.includes('地位協定')||c.includes('米軍')||
+             c.includes('在日米軍');
+    case 'tax':
+      return c.includes('消費税')||c.includes('財政')||c.includes('経済')||
+             c.includes('増税')||c.includes('減税')||c.includes('インボイス')||
+             c.includes('税率');
+    case 'pension':
+      return c.includes('年金')||c.includes('社会保障')||c.includes('医療費')||
+             c.includes('介護')||c.includes('高齢者')||c.includes('少子化')||
+             c.includes('社会保険');
+    case 'immigration':
+      return c.includes('移民')||c.includes('外国人')||c.includes('入管')||
+             c.includes('外国人労働者')||c.includes('特定技能')||c.includes('難民')||
+             c.includes('技能実習');
+    case 'history':
+      return c.includes('靖国')||c.includes('歴史')||c.includes('談話')||
+             c.includes('歴史認識')||c.includes('南京')||c.includes('慰安婦')||
+             c.includes('徴用工')||c.includes('戦後')||c.includes('参拝');
+    case 'judicial':
+      return c.includes('司法')||c.includes('冤罪')||c.includes('再審')||
+             c.includes('死刑')||c.includes('検察')||c.includes('裁判')||
+             c.includes('刑事')||c.includes('無罪')||c.includes('取調べ');
+    case 'middleeast':
+      return c.includes('中東')||c.includes('イラン')||c.includes('ガザ')||
+             c.includes('イスラエル')||c.includes('パレスチナ')||c.includes('ハマス')||
+             c.includes('停戦');
     default: return false;
   }
 }
@@ -2026,10 +2070,49 @@ function drawPoliticianIssueMap(issueKey){
     }
     return true;
   });
-  show.filter(p=>p.id!==hlId).forEach(p=>{
-    const {y,source}=getPoliticianIssuePos(p,issueKey);
-    dot(ctx,p,false,tx,ty,W,H,y,source==='personal'?0.85:0.35);
+  // 個人発言あり/なしに分類
+  const personalPols=show.filter(p=>politicianHasPersonalEv(p,issueKey));
+  const partyOnlyPols=show.filter(p=>!politicianHasPersonalEv(p,issueKey));
+
+  // 政党スタンスのみの議員を政党別にグループ化
+  const partyGroups={};
+  partyOnlyPols.forEach(p=>{
+    if(!partyGroups[p.party]) partyGroups[p.party]=[];
+    partyGroups[p.party].push(p);
   });
+
+  // 1) 政党大円を先に描画（個人ドットの背面）
+  Object.keys(partyGroups).forEach(partyName=>{
+    const pd=partyName==='中道改革連合'
+      ?PARTY_DATA.find(d=>d.id==='party_rikken')
+      :PARTY_DATA.find(d=>d.fullName===partyName||d.name===partyName);
+    if(!pd) return;
+    const yv=pd.pos[issueKey]??0;
+    const px2=tx(pd.x), py2=ty(yv);
+    if(px2<-60||px2>W+60||py2<-60||py2>H+60) return;
+    const col=pc(partyName);
+    const baseR=10+((pd.members?.total||0)/374)*25;
+    ctx.globalAlpha=0.4;
+    ctx.beginPath();ctx.arc(px2,py2,baseR,0,Math.PI*2);
+    ctx.fillStyle=col;ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.6)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.globalAlpha=1;
+    const lfs=10;
+    ctx.font=lfs+'px sans-serif';
+    ctx.globalAlpha=0.5;
+    ctx.fillStyle='rgba(7,9,15,.9)';ctx.textAlign='center';ctx.textBaseline='top';
+    for(let a=-1;a<=1;a++) for(let b=-1;b<=1;b++){if(a||b)ctx.fillText(pd.name,px2+a,py2+baseR+4+b);}
+    ctx.fillStyle='#dce4f0';
+    ctx.fillText(pd.name,px2,py2+baseR+4);
+    ctx.globalAlpha=1;
+  });
+
+  // 2) 個人発言のある議員を小さいドットで描画（前面）
+  personalPols.filter(p=>p.id!==hlId).forEach(p=>{
+    const {y}=getPoliticianIssuePos(p,issueKey);
+    dot(ctx,p,false,tx,ty,W,H,y,0.85);
+  });
+
   if(hlId){
     const hp=DATA.find(p=>p.id===hlId);
     if(hp&&show.includes(hp)){
