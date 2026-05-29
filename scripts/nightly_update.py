@@ -14,6 +14,7 @@ import time
 import requests
 import anthropic
 from datetime import datetime, date, timedelta
+from urllib.parse import urlparse
 
 ANTHROPIC_API_KEY = os.environ['ANTHROPIC_API_KEY']
 GH_TOKEN          = os.environ['GH_TOKEN']
@@ -28,6 +29,89 @@ GH_HEADERS = {
 }
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+
+# ── 一次情報ドメイン判定 ──────────────────────────────────
+# 不明ドメインは NG 扱い（ホワイトリスト方式）
+_PRIMARY_OK = re.compile(
+    r'(^|\.)go\.jp$'                  # 全政府機関
+    r'|(^|\.)lg\.jp$'                 # 地方議会
+    r'|^jimin\.jp$'                   # 自民党
+    r'|^cdp-japan\.jp$'               # 立憲民主党
+    r'|(^|\.)komei\.or\.jp$'          # 公明党
+    r'|^o-ishin\.jp$'                 # 日本維新の会
+    r'|^ishin\.o\.jp$'
+    r'|^new-kokumin\.jp$'             # 国民民主党
+    r'|(^|\.)jcp\.or\.jp$'            # 日本共産党
+    r'|^reiwa-shinsengumi\.com$'      # れいわ新選組
+    r'|(^|\.)sdp\.or\.jp$'            # 社民党
+    r'|^sanseito\.jp$'                # 参政党
+    r'|^hoshuto\.jp$'                 # 日本保守党
+    r'|(^|\.)x\.com$'                 # X/Twitter
+    r'|(^|\.)twitter\.com$'
+    r'|(^|\.)note\.com$'              # note
+    r'|(^|\.)youtube\.com$'           # YouTube
+    r'|^youtu\.be$'
+)
+
+REJECTION_MESSAGES = {
+    'url_not_primary':    (
+        '出典は一次情報（政府機関・国会会議録・政党公式HP・議員公式SNS等）に限ります。'
+        '報道機関やまとめサイトのリンクは却下されます。'
+    ),
+    'url_inaccessible':   (
+        '出典URLにアクセスできませんでした。'
+        '会員制ページや有料記事の可能性があります。公開アクセス可能なURLをご利用ください。'
+    ),
+    'content_mismatch':   '出典の内容と投稿された発言が一致しませんでした。',
+    'politician_mismatch':'該当議員の発言として確認できませんでした。',
+    'api_error':          'システムエラーが発生しました。時間を置いて再投稿してください。',
+}
+
+
+def extract_url_from_body(body):
+    """Issue body の '- URL: https://...' 行から URL を取得する。"""
+    m = re.search(r'-\s*URL:\s*(https?://\S+)', body)
+    if m:
+        return m.group(1).rstrip('.,)')
+    # フォールバック: body 中の最初の https?:// リンク
+    m = re.search(r'https?://\S+', body)
+    return m.group(0).rstrip('.,)') if m else None
+
+
+def is_primary_source(url):
+    """URL が一次情報ドメインかどうか判定（ホワイトリスト方式）。"""
+    try:
+        domain = urlparse(url).netloc.lower()
+        # www. プレフィックスを除去して判定
+        domain = re.sub(r'^www\.', '', domain)
+        return bool(_PRIMARY_OK.search(domain))
+    except Exception:
+        return False
+
+
+def check_url_accessible(url):
+    """HEAD リクエストで URL にアクセス可能か確認する。"""
+    headers = {'User-Agent': 'Mozilla/5.0 (compatible; seijika-map-bot/1.0)'}
+    try:
+        r = requests.head(url, timeout=10, allow_redirects=True, headers=headers)
+        if r.status_code == 405:
+            # HEAD 非対応サーバー → GET で再試行（ボディは読まない）
+            r = requests.get(url, timeout=10, allow_redirects=True,
+                             headers=headers, stream=True)
+            r.close()
+        return r.status_code < 400
+    except Exception:
+        return False
+
+
+def build_rejection_msg(reason_code, detail=''):
+    """却下コードからユーザー向け GitHub コメントを生成する。"""
+    msg = REJECTION_MESSAGES.get(reason_code, REJECTION_MESSAGES['content_mismatch'])
+    body = f'❌ 自動審査：却下\n\n理由：{msg}'
+    if detail:
+        body += f'\n\n（審査詳細：{detail}）'
+    return body
+
 
 def get_pending_issues():
     url = f'https://api.github.com/repos/{GH_OWNER}/{GH_REPO}/issues'
@@ -72,6 +156,7 @@ def get_politician_block(content, pid):
 def review_evidence_with_claude(issue_body, politician_info):
     prompt = f"""あなたは日本の政治情報の審査員です。
 以下のエビデンス投稿を審査し、信頼性を評価してください。
+（出典URLの一次情報チェック・アクセス確認は別途済みです）
 
 ## 投稿内容
 {issue_body}
@@ -80,14 +165,15 @@ def review_evidence_with_claude(issue_body, politician_info):
 {json.dumps(politician_info, ensure_ascii=False, indent=2)}
 
 ## 審査基準
-1. 出典URLが実在しそうか（公式HP・国会議事録・主要報道機関など）
+1. 投稿された発言内容が対象議員の発言として確認できるか
 2. 発言内容とカテゴリが一致しているか
 3. スコア変更が妥当か（現在のスコアと発言内容の整合性）
 
 ## 回答形式（JSON形式で回答してください）
 {{
   "approved": true または false,
-  "reason": "審査理由（日本語）",
+  "rejection_reason": "却下時のみ: content_mismatch（内容不一致）または politician_mismatch（議員不一致）",
+  "reason": "審査理由（日本語・50字以内）",
   "x_delta": 現在のX軸スコアへの変更値（-2〜+2、変更不要なら0）,
   "y_delta": 現在のY軸スコアへの変更値（-2〜+2、変更不要なら0）
 }}
@@ -205,6 +291,25 @@ def process_issue(issue, html_content):
 
     try:
         if title.startswith('[EV]'):
+            # ── URL 事前チェック ──────────────────────────
+            ev_url = extract_url_from_body(body)
+            if not ev_url:
+                close_issue(number,
+                    build_rejection_msg('url_not_primary', 'URLが見つかりませんでした'),
+                    success=False)
+                return html_content
+            if not is_primary_source(ev_url):
+                close_issue(number,
+                    build_rejection_msg('url_not_primary'),
+                    success=False)
+                return html_content
+            if not check_url_accessible(ev_url):
+                close_issue(number,
+                    build_rejection_msg('url_inaccessible'),
+                    success=False)
+                return html_content
+
+            # ── Claude 審査 ───────────────────────────────
             result = review_evidence_with_claude(body, politician_info)
             if result['approved']:
                 x_delta = float(result.get('x_delta', 0))
@@ -218,8 +323,9 @@ def process_issue(issue, html_content):
                     f'✅ 自動審査：承認\n\n理由：{result["reason"]}\n\n{score_msg}',
                     success=True)
             else:
+                reason_code = result.get('rejection_reason', 'content_mismatch')
                 close_issue(number,
-                    f'❌ 自動審査：却下\n\n理由：{result["reason"]}',
+                    build_rejection_msg(reason_code, result.get('reason', '')),
                     success=False)
 
         elif title.startswith('[BIRTH]') or title.startswith('[FIX]'):
