@@ -2121,6 +2121,20 @@ function drawPoliticianIssueMap(issueKey){
       dot(ctx,hp,true,tx,ty,W,H,y,undefined);
     }
   }
+
+  // 診断結果マーカー（当該イシューの結果がある場合のみ）
+  if(window.USER_POS && window.USER_RESULT?.issue === issueKey){
+    const ux=window.USER_POS.x, uy=window.USER_POS.y;
+    const umpx=tx(ux), umpy=ty(uy);
+    ctx.beginPath(); ctx.arc(umpx,umpy,18,0,Math.PI*2); ctx.fillStyle='rgba(61,214,140,0.07)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(umpx,umpy,11,0,Math.PI*2); ctx.strokeStyle='rgba(61,214,140,0.35)'; ctx.lineWidth=3; ctx.stroke();
+    ctx.beginPath(); ctx.arc(umpx,umpy,6,0,Math.PI*2); ctx.fillStyle='#3dd68c'; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.font='bold 10px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+    for(let a=-1;a<=1;a++) for(let b=-1;b<=1;b++){if(a||b){ctx.fillStyle='rgba(7,9,15,.9)';ctx.fillText('あなた',umpx+a,umpy-9+b);}}
+    ctx.fillStyle='#3dd68c'; ctx.fillText('あなた',umpx,umpy-9);
+  }
+
   const cnt={}; show.forEach(p=>cnt[p.party]=(cnt[p.party]||0)+1);
   const total=show.length;
   const legend=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([p,n])=>
@@ -2281,101 +2295,125 @@ window.addEventListener('load', ()=>{
 });
 let resizeTimer;
 window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(draw,300);});
-const QUIZ_QUESTIONS = [
-  /* ── 日米安保・防衛（Y軸寄り） ── */
-  { cat:'security', axis:'y',
-    q:'日本の防衛費をGDP比2%以上に増額すべきだ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[+8,+4,0,-4,-8] },
-  { cat:'security', axis:'y',
-    q:'日本は憲法9条を改正し、自衛隊を軍として明記すべきだ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[+8,+4,0,-4,-8] },
-  { cat:'security', axis:'y',
-    q:'敵基地攻撃能力（反撃能力）の保有は必要だ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[+8,+4,0,-4,-8] },
-
-  /* ── 対中政策（Y軸寄り） ── */
-  { cat:'china', axis:'y',
-    q:'中国の軍事的脅威に対し、日本はより強硬な姿勢で対応すべきだ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[+8,+4,0,-4,-8] },
-  { cat:'china', axis:'y',
-    q:'尖閣諸島問題は外交交渉より実力で守るべきだ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[+8,+4,0,-4,-8] },
-
-  /* ── 対ロ政策（Y軸寄り） ── */
-  { cat:'russia', axis:'y',
-    q:'ロシアへの経済制裁を強化し続けるべきだ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[+8,+4,0,-4,-8] },
-
-  /* ── 沖縄基地問題（X軸寄り） ── */
-  { cat:'okinawa', axis:'x',
-    q:'沖縄の米軍基地は日本の安全保障上、必要不可欠だ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[+8,+4,0,-4,-8] },
-  { cat:'okinawa', axis:'x',
-    q:'辺野古への移設工事は沖縄の民意を踏まえ中止すべきだ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[-8,-4,0,+4,+8] },
-
-  /* ── 原発政策（X軸寄り） ── */
-  { cat:'nuclear', axis:'x',
-    q:'エネルギー安全保障のために原子力発電を積極活用すべきだ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[+8,+4,0,-4,-8] },
-  { cat:'nuclear', axis:'x',
-    q:'日本は将来的に原発ゼロを目指すべきだ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[-8,-4,0,+4,+8] },
-
-  /* ── 経済政策（X軸寄り） ── */
-  { cat:'economy', axis:'x',
-    q:'消費税は段階的に廃止・引き下げすべきだ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[-8,-4,0,+4,+8] },
-  { cat:'economy', axis:'x',
-    q:'規制緩和と民間活力こそが経済成長の主な手段だ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[+8,+4,0,-4,-8] },
-  { cat:'economy', axis:'x',
-    q:'富裕層・大企業への課税を強化し、再分配を増やすべきだ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[-8,-4,0,+4,+8] },
-
-  /* ── 皇室制度（X軸強め） ── */
-  { cat:'imperial', axis:'x',
-    q:'皇位継承は男系男子を維持すべきだ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[+8,+4,0,-4,-8] },
-  { cat:'imperial', axis:'x',
-    q:'女性天皇・女系天皇を認めるべきだ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[-8,-4,0,+4,+8] },
-
-  /* ── 夫婦別姓（X軸強め） ── */
-  { cat:'surname', axis:'x',
-    q:'選択的夫婦別姓を早期に実現すべきだ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[-8,-4,0,+4,+8] },
-  { cat:'surname', axis:'x',
-    q:'夫婦が同じ姓を名乗ることは家族の一体感のために重要だ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[+8,+4,0,-4,-8] },
-
-  /* ── ジェンダー政策（X軸強め） ── */
-  { cat:'gender', axis:'x',
-    q:'同性婚を法律で認めるべきだ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[-8,-4,0,+4,+8] },
-  { cat:'gender', axis:'x',
-    q:'政治・経済の意思決定において女性割合を義務付けるクォータ制を導入すべきだ',
-    opts:['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'],
-    scores:[-8,-4,0,+4,+8] },
-];
+/* ══════════════════════════════════════════════════════════
+   月次ローテーション診断クイズ
+   GitHub Actions が毎月1日 02:00 JST に CURRENT_QUIZ_ISSUE を更新
+══════════════════════════════════════════════════════════ */
+/* QUIZ_ISSUE_START */
+const CURRENT_QUIZ_ISSUE = 'ukraine'; // 2026-06 — 毎月1日に自動更新
+/* QUIZ_ISSUE_END */
+const ISSUE_ORDER = ['defense','spy','surname','imperial','middleeast','ukraine','constitution','nuclear','tax','immigration','china','pension','history','judicial','okinawa'];
+const _O5 = ['強くそう思う','ややそう思う','どちらとも言えない','あまり思わない','全くそう思わない'];
+const _SF = [+8,+4,0,-4,-8];
+const _SR = [-8,-4,0,+4,+8];
+const ISSUE_QUIZ_DATA = {
+  defense:{questions:[
+    {cat:'defense',axis:'x',q:'防衛費をGDP比2%以上に引き上げるべきだ',opts:_O5,scores:_SF},
+    {cat:'defense',axis:'x',q:'自衛隊を憲法に明記し、軍としての地位を確立すべきだ',opts:_O5,scores:_SF},
+    {cat:'defense',axis:'y',q:'敵基地攻撃能力（反撃能力）の保有は国防上必要だ',opts:_O5,scores:_SF},
+    {cat:'defense',axis:'y',q:'安全保障環境の悪化を踏まえ、防衛力を抜本的に強化すべきだ',opts:_O5,scores:_SF},
+    {cat:'defense',axis:'y',q:'防衛費の増額より社会保障・教育への財源確保を優先すべきだ',opts:_O5,scores:_SR},
+  ]},
+  spy:{questions:[
+    {cat:'spy',axis:'x',q:'国家機密保護のために情報保護法制を大幅に強化すべきだ',opts:_O5,scores:_SF},
+    {cat:'spy',axis:'x',q:'スパイ防止法が人権や表現の自由を脅かすという懸念は過剰だ',opts:_O5,scores:_SF},
+    {cat:'spy',axis:'y',q:'現行法（不正競争防止法など）はスパイ・諜報活動への対処として不十分だ',opts:_O5,scores:_SF},
+    {cat:'spy',axis:'y',q:'外国勢力による工作活動を明示的に禁じる「スパイ防止法」を制定すべきだ',opts:_O5,scores:_SF},
+    {cat:'spy',axis:'y',q:'経済安保・サイバー防衛を含む情報保護法制の整備は急務だ',opts:_O5,scores:_SF},
+  ]},
+  surname:{questions:[
+    {cat:'surname',axis:'x',q:'家族の姓を統一することは日本の伝統・文化として重要だ',opts:_O5,scores:_SF},
+    {cat:'surname',axis:'x',q:'夫婦別姓の導入が家族の絆や戸籍制度を崩す危険があると思う',opts:_O5,scores:_SF},
+    {cat:'surname',axis:'y',q:'夫婦がそれぞれの旧姓を名乗れる「選択的夫婦別姓」を認めるべきだ',opts:_O5,scores:_SF},
+    {cat:'surname',axis:'y',q:'旧姓使用による職業・キャリアへの不利益は制度改革で解決すべきだ',opts:_O5,scores:_SF},
+    {cat:'surname',axis:'y',q:'選択的夫婦別姓の導入に反対だ',opts:_O5,scores:_SR},
+  ]},
+  imperial:{questions:[
+    {cat:'imperial',axis:'x',q:'皇位継承は男系男子を維持する伝統を守るべきだ',opts:_O5,scores:_SF},
+    {cat:'imperial',axis:'x',q:'皇室制度の改変は日本の歴史・文化に深刻な影響を与える',opts:_O5,scores:_SF},
+    {cat:'imperial',axis:'y',q:'女性天皇・女系天皇を認めるよう皇室典範を改正すべきだ',opts:_O5,scores:_SF},
+    {cat:'imperial',axis:'y',q:'安定的な皇位継承のために性別を問わず継承できるよう法整備すべきだ',opts:_O5,scores:_SF},
+    {cat:'imperial',axis:'y',q:'旧宮家（旧皇族）の皇籍復帰によって男系継承を維持すべきだ',opts:_O5,scores:_SR},
+  ]},
+  middleeast:{questions:[
+    {cat:'middleeast',axis:'x',q:'日本は中東問題に対しても安保上の関与を深めるべきだ',opts:_O5,scores:_SF},
+    {cat:'middleeast',axis:'x',q:'制裁などの強硬措置よりも対話・外交によって中東問題を解決すべきだ',opts:_O5,scores:_SR},
+    {cat:'middleeast',axis:'y',q:'イランの核開発問題に対し、日本は制裁参加など強硬路線を支持すべきだ',opts:_O5,scores:_SF},
+    {cat:'middleeast',axis:'y',q:'ガザ問題でイスラエルの行動を支持するより停戦と国際法遵守を強く求めるべきだ',opts:_O5,scores:_SR},
+    {cat:'middleeast',axis:'y',q:'中東産油国との経済関係維持のため批判的な外交姿勢は避けるべきだ',opts:_O5,scores:_SF},
+  ]},
+  ukraine:{questions:[
+    {cat:'ukraine',axis:'x',q:'ロシアへの経済制裁は戦争が終わるまで強化し続けるべきだ',opts:_O5,scores:_SF},
+    {cat:'ukraine',axis:'x',q:'ロシアのウクライナ侵攻は明らかな国際法違反であり、日本は強く非難すべきだ',opts:_O5,scores:_SF},
+    {cat:'ukraine',axis:'y',q:'日本はウクライナへの軍事的・物資的支援を継続すべきだ',opts:_O5,scores:_SF},
+    {cat:'ukraine',axis:'y',q:'日本はウクライナへの武器提供を含む支援を検討すべきだ',opts:_O5,scores:_SF},
+    {cat:'ukraine',axis:'y',q:'停戦・和平交渉を優先し、軍事支援よりも外交努力に重点を置くべきだ',opts:_O5,scores:_SR},
+  ]},
+  constitution:{questions:[
+    {cat:'constitution',axis:'x',q:'日本国憲法は時代に合わせた見直しが必要だ',opts:_O5,scores:_SF},
+    {cat:'constitution',axis:'x',q:'緊急事態条項など安全保障上必要な憲法改正を進めるべきだ',opts:_O5,scores:_SF},
+    {cat:'constitution',axis:'y',q:'日本国憲法9条を改正し、自衛隊を軍として明記すべきだ',opts:_O5,scores:_SF},
+    {cat:'constitution',axis:'y',q:'憲法9条の改正は日本の軍事大国化・戦争参加につながる危険がある',opts:_O5,scores:_SR},
+    {cat:'constitution',axis:'y',q:'集団的自衛権の完全行使を可能にするための憲法改正が必要だ',opts:_O5,scores:_SF},
+  ]},
+  nuclear:{questions:[
+    {cat:'nuclear',axis:'x',q:'エネルギー安全保障のために原子力発電を積極活用すべきだ',opts:_O5,scores:_SF},
+    {cat:'nuclear',axis:'x',q:'2050年カーボンニュートラルには原子力が不可欠だ',opts:_O5,scores:_SF},
+    {cat:'nuclear',axis:'y',q:'既設原子力発電所の運転期間延長・再稼働を推進すべきだ',opts:_O5,scores:_SF},
+    {cat:'nuclear',axis:'y',q:'次世代革新炉の建設・新増設を積極的に進めるべきだ',opts:_O5,scores:_SF},
+    {cat:'nuclear',axis:'y',q:'福島原発事故の教訓から、原発への依存度を段階的に下げるべきだ',opts:_O5,scores:_SR},
+  ]},
+  tax:{questions:[
+    {cat:'tax',axis:'x',q:'財政再建のために消費税率の維持・将来的な引き上げはやむを得ない',opts:_O5,scores:_SF},
+    {cat:'tax',axis:'x',q:'消費税は逆進性があり、低所得者保護のために廃止・減税すべきだ',opts:_O5,scores:_SR},
+    {cat:'tax',axis:'y',q:'少子化対策・社会保障財源として消費税収入は重要だ',opts:_O5,scores:_SF},
+    {cat:'tax',axis:'y',q:'消費税を段階的に廃止し、法人税・所得税等の財源で代替すべきだ',opts:_O5,scores:_SR},
+    {cat:'tax',axis:'y',q:'インボイス制度は中小事業者・フリーランスの負担を不当に増やした',opts:_O5,scores:_SR},
+  ]},
+  immigration:{questions:[
+    {cat:'immigration',axis:'x',q:'外国人の受け入れより日本社会の文化的均質性・治安を守ることが重要だ',opts:_O5,scores:_SF},
+    {cat:'immigration',axis:'x',q:'難民・移民の権利保護より入国管理の厳格化を優先すべきだ',opts:_O5,scores:_SF},
+    {cat:'immigration',axis:'y',q:'労働力不足解消のために外国人労働者・移民の受け入れを拡大すべきだ',opts:_O5,scores:_SF},
+    {cat:'immigration',axis:'y',q:'入管法を改正し、外国人の権利保護と公正な在留管理を実現すべきだ',opts:_O5,scores:_SF},
+    {cat:'immigration',axis:'y',q:'社会統合コストや文化摩擦を考慮し、外国人受け入れ拡大には慎重であるべきだ',opts:_O5,scores:_SR},
+  ]},
+  china:{questions:[
+    {cat:'china',axis:'x',q:'中国の軍事的脅威・覇権主義的行動に対し、日本はより強硬な姿勢で対応すべきだ',opts:_O5,scores:_SF},
+    {cat:'china',axis:'x',q:'日中関係は経済的相互依存が深く、対話・協調外交を重視すべきだ',opts:_O5,scores:_SR},
+    {cat:'china',axis:'y',q:'尖閣諸島問題は外交交渉より実力（自衛力）で守るべきだ',opts:_O5,scores:_SF},
+    {cat:'china',axis:'y',q:'台湾有事への備えとして日本の防衛協力体制を強化すべきだ',opts:_O5,scores:_SF},
+    {cat:'china',axis:'y',q:'中国依存のサプライチェーンを見直し、経済安保を強化すべきだ',opts:_O5,scores:_SF},
+  ]},
+  pension:{questions:[
+    {cat:'pension',axis:'x',q:'年金財政の持続可能性のために受給額の抑制・支給開始年齢の引き上げはやむを得ない',opts:_O5,scores:_SF},
+    {cat:'pension',axis:'x',q:'現役世代の保険料負担を抑えるために年金給付の適正化が必要だ',opts:_O5,scores:_SF},
+    {cat:'pension',axis:'y',q:'基礎年金の給付水準を引き上げ、最低保障年金制度を創設すべきだ',opts:_O5,scores:_SF},
+    {cat:'pension',axis:'y',q:'非正規・自営業者の年金格差解消のために社会保険の適用を拡大すべきだ',opts:_O5,scores:_SF},
+    {cat:'pension',axis:'y',q:'年金制度は積立方式に移行し、若者世代の負担を大幅に軽減すべきだ',opts:_O5,scores:_SR},
+  ]},
+  history:{questions:[
+    {cat:'history',axis:'x',q:'日本の近現代史を「侵略の歴史」と一方的に否定する歴史観に反対だ',opts:_O5,scores:_SF},
+    {cat:'history',axis:'x',q:'靖国神社は日本の戦没者への感謝・追悼の場として尊重されるべきだ',opts:_O5,scores:_SF},
+    {cat:'history',axis:'y',q:'内閣総理大臣の靖国神社公式参拝は国内問題であり外国が干渉すべきではない',opts:_O5,scores:_SF},
+    {cat:'history',axis:'y',q:'閣僚の靖国参拝は近隣諸国との関係を考慮し自粛すべきだ',opts:_O5,scores:_SR},
+    {cat:'history',axis:'y',q:'日本のアジア太平洋戦争での行為について誠実な謝罪外交を続けるべきだ',opts:_O5,scores:_SR},
+  ]},
+  judicial:{questions:[
+    {cat:'judicial',axis:'x',q:'日本の刑事司法制度（捜査・起訴・裁判）は基本的に信頼できる',opts:_O5,scores:_SF},
+    {cat:'judicial',axis:'x',q:'冤罪問題は個別事案であり制度全体の抜本的改革は不要だ',opts:_O5,scores:_SF},
+    {cat:'judicial',axis:'y',q:'取調べの全過程録音・録画（全件可視化）を義務付けるべきだ',opts:_O5,scores:_SF},
+    {cat:'judicial',axis:'y',q:'長期拘留・自白偏重の捜査慣行を改め被疑者・被告の権利を強化すべきだ',opts:_O5,scores:_SF},
+    {cat:'judicial',axis:'y',q:'証拠開示制度の拡充と再審制度の抜本的改革が必要だ',opts:_O5,scores:_SF},
+  ]},
+  okinawa:{questions:[
+    {cat:'okinawa',axis:'x',q:'在日米軍基地は日本の安全保障上不可欠な存在だ',opts:_O5,scores:_SF},
+    {cat:'okinawa',axis:'x',q:'日米安保体制の維持のために沖縄の基地負担はやむを得ない',opts:_O5,scores:_SF},
+    {cat:'okinawa',axis:'y',q:'辺野古への新基地建設工事は国防上の必要性から進めるべきだ',opts:_O5,scores:_SF},
+    {cat:'okinawa',axis:'y',q:'沖縄県民の民意を尊重し辺野古移設工事は中断すべきだ',opts:_O5,scores:_SR},
+    {cat:'okinawa',axis:'y',q:'SOFA（日米地位協定）を改定し米軍基地関連問題を解決すべきだ',opts:_O5,scores:_SR},
+  ]},
+};
+const QUIZ_QUESTIONS = ISSUE_QUIZ_DATA[CURRENT_QUIZ_ISSUE]?.questions || ISSUE_QUIZ_DATA.defense.questions;
 
 const TOTAL_Q = QUIZ_QUESTIONS.length;
 let quizStep = 0;
@@ -2385,6 +2423,9 @@ function openQuiz(){
   quizStep = 0;
   quizAnswers = new Array(TOTAL_Q).fill(null);
   document.getElementById('quiz').style.display='flex';
+  const issueDef = typeof ISSUES !== 'undefined' ? ISSUES.find(i=>i.key===CURRENT_QUIZ_ISSUE) : null;
+  const lbl = document.getElementById('quiz-issue-lbl');
+  if(lbl) lbl.textContent = issueDef ? '今月のテーマ：' + issueDef.label : '';
   renderQuizStep();
 }
 function closeQuiz(){
@@ -2400,12 +2441,16 @@ function renderQuizStep(){
   document.getElementById('quiz-prog-bar').style.width = pct+'%';
   document.getElementById('quiz-prog-txt').textContent = `設問 ${quizStep+1} / ${TOTAL_Q}`;
 
-  // カテゴリラベル
-  const catNames = {
+  // カテゴリラベル（15イシュー対応）
+  const _issueRef = typeof ISSUES !== 'undefined' ? ISSUES.find(i=>i.key===CURRENT_QUIZ_ISSUE) : null;
+  const catNames = Object.fromEntries(
+    (typeof ISSUES !== 'undefined' ? ISSUES : []).map(i=>[i.key, i.label])
+  );
+  Object.assign(catNames, {
     security:'日米安保・防衛', china:'対中政策', russia:'対ロ政策',
     okinawa:'沖縄基地問題', nuclear:'原発政策', economy:'経済政策',
     imperial:'皇室制度', surname:'夫婦別姓', gender:'ジェンダー政策'
-  };
+  });
 
   const area = document.getElementById('quiz-q-area');
   area.innerHTML = `
@@ -2473,61 +2518,33 @@ function quizBack(){
   if(quizStep>0){ quizStep--; renderQuizStep(); document.getElementById('quiz-box').scrollTop=0; }
 }
 
-/* ── スコア計算 ── */
+/* ── スコア計算（イシュー別）── */
 function calcQuizResult(){
-  // カテゴリ別スコア集計
-  const catScores = {};
-  const catCounts = {};
+  let xSum=0, xCnt=0, ySum=0, yCnt=0;
   QUIZ_QUESTIONS.forEach((q,i)=>{
     const a = quizAnswers[i];
     if(a===null) return;
     const s = q.scores[a];
-    if(!catScores[q.cat]) {catScores[q.cat]=0; catCounts[q.cat]=0;}
-    catScores[q.cat] += s;
-    catCounts[q.cat]++;
+    if(q.axis==='x'){ xSum+=s; xCnt++; }
+    else             { ySum+=s; yCnt++; }
   });
-
-  // カテゴリ別平均（-10〜+10）
-  const catAvg = {};
-  for(const k in catScores) catAvg[k] = catScores[k]/catCounts[k];
-
-  // X軸：保守↔リベラル（正=保守）
-  // 対象: okinawa(0.15) nuclear(0.10) economy(0.15) imperial(0.40) surname(0.30) gender(0.25)
-  const xWeights = {okinawa:0.15,nuclear:0.10,economy:0.15,imperial:0.40,surname:0.30,gender:0.25};
-  let xSum=0, xW=0;
-  for(const [k,w] of Object.entries(xWeights)){
-    if(catAvg[k]!=null){xSum+=catAvg[k]*w; xW+=w;}
-  }
-  const userX = xW>0 ? Math.max(-10,Math.min(10, Math.round(xSum/xW*10)/10)) : 0;
-
-  // Y軸：タカ↔ハト（正=タカ）
-  // 対象: security(0.55) china(0.25) russia(0.15)
-  const yWeights = {security:0.55,china:0.25,russia:0.15};
-  let ySum=0, yW=0;
-  for(const [k,w] of Object.entries(yWeights)){
-    if(catAvg[k]!=null){ySum+=catAvg[k]*w; yW+=w;}
-  }
-  const userY = yW>0 ? Math.max(-10,Math.min(10, Math.round(ySum/yW*10)/10)) : 0;
-
-  // カテゴリスコアを1〜10に変換（バタフライ用）
-  // -10→1, 0→5, +10→10
-  const toS = v => Math.max(1,Math.min(10, Math.round((v+10)/20*9)+1));
-  const userS = {};
-  for(const k of ['security','economy','china','russia','okinawa','nuclear','imperial','surname','gender']){
-    userS[k] = catAvg[k]!=null ? toS(catAvg[k]) : 5;
-  }
-
-  // 保存
-  window.USER_RESULT = {x:userX, y:userY, s:userS, catAvg};
-
+  const clamp = v => Math.max(-10,Math.min(10, Math.round(v*10)/10));
+  const userX = xCnt>0 ? clamp(xSum/xCnt) : 0;
+  const userY = yCnt>0 ? clamp(ySum/yCnt) : 0;
+  window.USER_RESULT = {issue: CURRENT_QUIZ_ISSUE, x: userX, y: userY};
   closeQuiz();
-  showUserResult(userX, userY, userS);
+  showUserResult(userX, userY, null);
 }
 
 
 function showUserResult(ux, uy, us){
   window.USER_POS = {x:ux, y:uy};
-  draw();
+  const issueKey = window.USER_RESULT?.issue;
+  if(issueKey && typeof setIssue !== 'undefined' && typeof currentMode !== 'undefined' && currentMode !== 'party'){
+    setIssue(issueKey);
+  } else {
+    draw();
+  }
   updateQuizHdrBtn();
   openUserPanel(null);
 }
@@ -2576,53 +2593,75 @@ function closeUserPanel(){
 function renderUserPanel(){
   const res = window.USER_RESULT;
   if(!res) return;
-  const {x:ux, y:uy, s:us} = res;
+  const {x:ux, y:uy, s:us, issue: resIssue} = res;
   const uCol = '#3dd68c';
-  const xLbl = xLabel(ux), yLbl = yLabel(uy);
   const xCol = ux >= 0 ? '#e8354a' : '#4a7fe8';
   const yCol = uy >= 0 ? '#e8354a' : '#4a7fe8';
   const cmp = _upCmpId ? DATA.find(p => p.id === _upCmpId) : null;
   const cmpCol = cmp ? pc(cmp.party) : null;
 
-  // 近い政治家 TOP5
-  const dists = DATA.map(p => ({p, d: Math.sqrt((p.x-ux)**2 + (p.y-uy)**2)}))
-                    .sort((a,b) => a.d - b.d).slice(0, 5);
+  // イシュー固有 or 汎用ラベル
+  const issue = resIssue && typeof ISSUES !== 'undefined' ? ISSUES.find(i=>i.key===resIssue) : null;
+  const issueLabel = issue ? issue.label : null;
+  const xAxisName = issue ? (issue.xNeg+' ↔ '+issue.xPos) : '保守 ↔ リベラル';
+  const yAxisName = issue ? (issue.yNeg+' ↔ '+issue.yPos) : 'タカ派 ↔ ハト派';
+  const xLbl = issue ? (Math.abs(ux)<1.5?'中立的':ux>0?issue.xPos:issue.xNeg) : xLabel(ux);
+  const yLbl = issue ? (Math.abs(uy)<1.5?'中立的':uy>0?issue.yPos:issue.yNeg) : yLabel(uy);
 
-  // バタフライ行
-  const bfRows = CATS.map(cat => {
-    const sc = us[cat.key] || 5;
-    const csc = cmp ? (cmp.s[cat.key] || 5) : null;
-    let lw = sc < 5 ? ((5-sc)/4)*100 : 0;
-    let rw = sc > 5 ? ((sc-5)/5)*100 : 0;
-    if(sc === 5){ lw = 12; rw = 12; }
-    const lbl = catLabel(cat.key, sc);
-    let clw = 0, crw = 0;
-    if(csc !== null){
-      clw = csc < 5 ? ((5-csc)/4)*100 : 0;
-      crw = csc > 5 ? ((csc-5)/5)*100 : 0;
-      if(csc === 5){ clw = 12; crw = 12; }
+  // 近い政治家 TOP5（イシュー固有距離 or 汎用）
+  const dists = (() => {
+    if(issue && typeof getPoliticianIssuePos !== 'undefined'){
+      return DATA.map(p=>{
+        const {y:iy}=getPoliticianIssuePos(p,resIssue);
+        return {p, d:Math.sqrt((p.x-ux)**2+(iy-uy)**2)};
+      }).sort((a,b)=>a.d-b.d).slice(0,5);
     }
-    return '<div class="br vis" style="display:grid;grid-template-columns:90px 1fr 90px 1fr;">'
-      + '<div class="rl" style="font-size:9px">' + cat.label + '</div>'
-      + '<div class="tl2" style="position:relative">'
-      + (cmp ? '<div style="position:absolute;top:50%;transform:translateY(-50%);height:5px;right:0;width:' + clw + '%;background:' + cmpCol + '55;border-radius:2px;z-index:0"></div>' : '')
-      + '<div class="bl2" style="position:relative;z-index:1;width:' + lw + '%;background:linear-gradient(270deg,' + uCol + ',' + uCol + '99)"></div>'
-      + '</div>'
-      + '<div class="sn" style="color:' + uCol + ';font-size:8px;font-family:sans-serif;width:auto;padding:0 3px;visibility:visible;overflow:visible;line-height:1.3">' + lbl + '</div>'
-      + '<div class="tr2" style="position:relative">'
-      + (cmp ? '<div style="position:absolute;top:50%;transform:translateY(-50%);height:5px;left:0;width:' + crw + '%;background:' + cmpCol + '55;border-radius:2px;z-index:0"></div>' : '')
-      + '<div class="brr" style="position:relative;z-index:1;width:' + rw + '%;background:linear-gradient(90deg,' + uCol + ',' + uCol + '99)"></div>'
-      + '</div></div>';
-  }).join('');
+    return DATA.map(p=>({p,d:Math.sqrt((p.x-ux)**2+(p.y-uy)**2)})).sort((a,b)=>a.d-b.d).slice(0,5);
+  })();
 
-  const cmpBanner = cmp ? (
-    '<div style="margin-bottom:14px;padding:10px 12px;background:' + cmpCol + '11;border:1px solid ' + cmpCol + '44;display:flex;align-items:center;justify-content:space-between">'
-    + '<div><div style="font-size:11px;font-weight:700;color:' + cmpCol + '">' + cmp.name + ' と比較中</div>'
-    + '<div style="font-size:9px;color:#5a6a88">' + cmp.party + ' ／ ' + cmp.house + '</div></div>'
-    + '<button onclick="_upCmpId=null;renderUserPanel()" style="padding:4px 10px;background:none;border:1px solid #2c3550;color:#5a6a88;font-size:10px;cursor:pointer">✕ 解除</button></div>'
-    + '<div class="up-legend"><span><span class="up-leg-dot" style="background:' + uCol + '"></span>あなた</span>'
-    + '<span><span class="up-leg-dot" style="background:' + cmpCol + '55"></span>' + cmp.name + '</span></div>'
-  ) : '';
+  // バタフライ行（汎用クイズのみ）
+  let bfSection = '';
+  if(us){
+    const bfRows = CATS.map(cat => {
+      const sc = us[cat.key] || 5;
+      const csc = cmp ? (cmp.s[cat.key] || 5) : null;
+      let lw = sc < 5 ? ((5-sc)/4)*100 : 0;
+      let rw = sc > 5 ? ((sc-5)/5)*100 : 0;
+      if(sc === 5){ lw = 12; rw = 12; }
+      const lbl = catLabel(cat.key, sc);
+      let clw = 0, crw = 0;
+      if(csc !== null){
+        clw = csc < 5 ? ((5-csc)/4)*100 : 0;
+        crw = csc > 5 ? ((csc-5)/5)*100 : 0;
+        if(csc === 5){ clw = 12; crw = 12; }
+      }
+      return '<div class="br vis" style="display:grid;grid-template-columns:90px 1fr 90px 1fr;">'
+        + '<div class="rl" style="font-size:9px">' + cat.label + '</div>'
+        + '<div class="tl2" style="position:relative">'
+        + (cmp ? '<div style="position:absolute;top:50%;transform:translateY(-50%);height:5px;right:0;width:' + clw + '%;background:' + cmpCol + '55;border-radius:2px;z-index:0"></div>' : '')
+        + '<div class="bl2" style="position:relative;z-index:1;width:' + lw + '%;background:linear-gradient(270deg,' + uCol + ',' + uCol + '99)"></div>'
+        + '</div>'
+        + '<div class="sn" style="color:' + uCol + ';font-size:8px;font-family:sans-serif;width:auto;padding:0 3px;visibility:visible;overflow:visible;line-height:1.3">' + lbl + '</div>'
+        + '<div class="tr2" style="position:relative">'
+        + (cmp ? '<div style="position:absolute;top:50%;transform:translateY(-50%);height:5px;left:0;width:' + crw + '%;background:' + cmpCol + '55;border-radius:2px;z-index:0"></div>' : '')
+        + '<div class="brr" style="position:relative;z-index:1;width:' + rw + '%;background:linear-gradient(90deg,' + uCol + ',' + uCol + '99)"></div>'
+        + '</div></div>';
+    }).join('');
+
+    const cmpBanner = cmp ? (
+      '<div style="margin-bottom:14px;padding:10px 12px;background:' + cmpCol + '11;border:1px solid ' + cmpCol + '44;display:flex;align-items:center;justify-content:space-between">'
+      + '<div><div style="font-size:11px;font-weight:700;color:' + cmpCol + '">' + cmp.name + ' と比較中</div>'
+      + '<div style="font-size:9px;color:#5a6a88">' + cmp.party + ' ／ ' + cmp.house + '</div></div>'
+      + '<button onclick="_upCmpId=null;renderUserPanel()" style="padding:4px 10px;background:none;border:1px solid #2c3550;color:#5a6a88;font-size:10px;cursor:pointer">✕ 解除</button></div>'
+      + '<div class="up-legend"><span><span class="up-leg-dot" style="background:' + uCol + '"></span>あなた</span>'
+      + '<span><span class="up-leg-dot" style="background:' + cmpCol + '55"></span>' + cmp.name + '</span></div>'
+    ) : '';
+
+    bfSection = '<div class="up-bf-title">BUTTERFLY CHART — あなたの政策スタンス</div>'
+      + '<div class="up-bf-axis"><span>◀ リベラル側</span><span>保守側 ▶</span></div>'
+      + '<div style="height:1px;background:#1e2535;margin:6px 0 14px"></div>'
+      + cmpBanner + bfRows;
+  }
 
   const nearItems = dists.map(({p, d}) => {
     const col2 = pc(p.party);
@@ -2637,29 +2676,31 @@ function renderUserPanel(){
       + '<div style="font-size:11px;font-weight:700;color:#3dd68c;width:32px;text-align:right">' + pct + '%</div></div></div>';
   }).join('');
 
+  const titleHtml = issueLabel
+    ? ('<div class="up-title">【' + issueLabel + '】でのあなたの立場</div>'
+       + '<div class="up-sub" style="color:#c9a84c">' + (resIssue||'').toUpperCase() + ' ISSUE POSITION</div>')
+    : ('<div class="up-title">あなたの政治的ポジション</div><div class="up-sub">YOUR POLITICAL POSITION</div>');
+
   document.getElementById('up-content').innerHTML =
     '<div class="up-head">'
-    + '<div><div class="up-title">あなたの政治的ポジション</div><div class="up-sub">YOUR POLITICAL POSITION</div></div>'
+    + '<div>' + titleHtml + '</div>'
     + '<div style="text-align:right"><div style="font-size:11px;color:#3dd68c;font-weight:700;margin-top:4px">' + xLbl + ' × ' + yLbl + '</div></div></div>'
     + '<div class="up-map-wrap"><canvas id="up-cv"></canvas></div>'
     + '<div class="up-scores">'
-    + '<div class="up-score-card"><div class="up-score-lbl">保守 ↔ リベラル</div><div class="up-score-val" style="color:' + xCol + '">' + xLbl + '</div><div class="up-score-num">' + (ux>0?'+':'') + ux + '</div></div>'
-    + '<div class="up-score-card"><div class="up-score-lbl">タカ派 ↔ ハト派</div><div class="up-score-val" style="color:' + yCol + '">' + yLbl + '</div><div class="up-score-num">' + (uy>0?'+':'') + uy + '</div></div>'
+    + '<div class="up-score-card"><div class="up-score-lbl">' + xAxisName + '</div><div class="up-score-val" style="color:' + xCol + '">' + xLbl + '</div><div class="up-score-num">' + (ux>0?'+':'') + ux + '</div></div>'
+    + '<div class="up-score-card"><div class="up-score-lbl">' + yAxisName + '</div><div class="up-score-val" style="color:' + yCol + '">' + yLbl + '</div><div class="up-score-num">' + (uy>0?'+':'') + uy + '</div></div>'
     + '</div>'
     + '<div class="up-actions">'
     + '<button class="up-act-primary" onclick="closeUserPanel();setTimeout(openQuiz,150)">🔄 再診断する</button>'
     + '<button class="up-act-secondary" onclick="closeUserPanel()">← マップに戻る</button>'
     + '</div>'
-    + '<div class="up-bf-title">BUTTERFLY CHART — あなたの政策スタンス</div>'
-    + '<div class="up-bf-axis"><span>◀ リベラル側</span><span>保守側 ▶</span></div>'
-    + '<div style="height:1px;background:#1e2535;margin:6px 0 14px"></div>'
-    + cmpBanner + bfRows
-    + '<div class="up-near"><div class="up-near-title">近い政治家と比較 <span style="font-weight:400">（クリックでバタフライ比較）</span></div>' + nearItems + '</div>';
+    + bfSection
+    + '<div class="up-near"><div class="up-near-title">近い政治家と比較 <span style="font-weight:400">（クリックで選択）</span></div>' + nearItems + '</div>';
 
-  requestAnimationFrame(() => drawUserMinimap(ux, uy, cmp));
+  requestAnimationFrame(() => drawUserMinimap(ux, uy, cmp, resIssue));
 }
 
-function drawUserMinimap(ux, uy, cmp){
+function drawUserMinimap(ux, uy, cmp, issueKey){
   const cv = document.getElementById('up-cv');
   if(!cv) return;
   const wrap = cv.parentElement;
@@ -2672,36 +2713,40 @@ function drawUserMinimap(ux, uy, cmp){
   const tx = v => W/2 + v*SC;
   const ty = v => H/2 - v*SC;
 
+  const issue = issueKey && typeof ISSUES !== 'undefined' ? ISSUES.find(i=>i.key===issueKey) : null;
+  const getPlotY = p => {
+    if(issue && typeof getPoliticianIssuePos !== 'undefined'){
+      return getPoliticianIssuePos(p, issueKey).y;
+    }
+    return p.y;
+  };
+
   ctx.clearRect(0, 0, W, H);
-  // 背景
   [[W/2,0,W,H/2,'rgba(232,53,74,0.04)'],[0,0,W/2,H/2,'rgba(74,127,232,0.04)'],
    [0,H/2,W/2,H,'rgba(74,127,232,0.04)'],[W/2,H/2,W,H,'rgba(232,53,74,0.04)']].forEach(([x1,y1,x2,y2,c])=>{
     ctx.fillStyle=c; ctx.fillRect(x1,y1,x2-x1,y2-y1);
   });
-  // グリッド
   ctx.strokeStyle='rgba(44,53,80,0.4)'; ctx.lineWidth=0.5;
   for(let v=-8;v<=8;v+=2){
     ctx.beginPath(); ctx.moveTo(tx(v),ty(-10)); ctx.lineTo(tx(v),ty(10)); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(tx(-10),ty(v)); ctx.lineTo(tx(10),ty(v)); ctx.stroke();
   }
-  // 軸
   ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=1.2;
   ctx.beginPath(); ctx.moveTo(tx(-10),ty(0)); ctx.lineTo(tx(10),ty(0)); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(tx(0),ty(-10)); ctx.lineTo(tx(0),ty(10)); ctx.stroke();
-  // 全政治家
   DATA.forEach(p => {
     const isCmp = cmp && cmp.id === p.id;
-    ctx.beginPath(); ctx.arc(tx(p.x), ty(p.y), isCmp ? 5.5 : 2, 0, Math.PI*2);
+    const py = getPlotY(p);
+    ctx.beginPath(); ctx.arc(tx(p.x), ty(py), isCmp ? 5.5 : 2, 0, Math.PI*2);
     ctx.fillStyle = isCmp ? pc(p.party) : pc(p.party) + '44'; ctx.fill();
     if(isCmp){
       ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=1.5; ctx.stroke();
       ctx.font='bold 9px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='bottom';
       ctx.fillStyle='#07090f';
-      for(let a=-1;a<=1;a++) for(let b=-1;b<=1;b++){if(a||b)ctx.fillText(p.name,tx(p.x)+a,ty(p.y)-7+b);}
-      ctx.fillStyle=pc(p.party); ctx.fillText(p.name,tx(p.x),ty(p.y)-7);
+      for(let a=-1;a<=1;a++) for(let b=-1;b<=1;b++){if(a||b)ctx.fillText(p.name,tx(p.x)+a,ty(py)-7+b);}
+      ctx.fillStyle=pc(p.party); ctx.fillText(p.name,tx(p.x),ty(py)-7);
     }
   });
-  // あなたドット
   const px2=tx(ux), py2=ty(uy);
   ctx.beginPath(); ctx.arc(px2,py2,22,0,Math.PI*2); ctx.fillStyle='rgba(61,214,140,0.07)'; ctx.fill();
   ctx.beginPath(); ctx.arc(px2,py2,14,0,Math.PI*2); ctx.strokeStyle='rgba(61,214,140,0.30)'; ctx.lineWidth=3; ctx.stroke();
@@ -2711,12 +2756,16 @@ function drawUserMinimap(ux, uy, cmp){
   ctx.fillStyle='#07090f';
   for(let a=-1;a<=1;a++) for(let b=-1;b<=1;b++){if(a||b)ctx.fillText('あなた',px2+a,py2-12+b);}
   ctx.fillStyle='#3dd68c'; ctx.fillText('あなた',px2,py2-12);
-  // 軸ラベル
+  // 軸ラベル（イシュー固有 or 汎用）
   ctx.font='bold 9px sans-serif'; ctx.fillStyle='rgba(90,106,136,0.8)';
-  ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText('▲ タカ派',tx(0),2);
-  ctx.textBaseline='bottom'; ctx.fillText('▼ ハト派',tx(0),H-2);
-  ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.fillText('保守 ▶',W-4,H/2);
-  ctx.textAlign='left'; ctx.fillText('◀ リベラル',4,H/2);
+  const yPosLbl = issue ? '▲ '+issue.yPos : '▲ タカ派';
+  const yNegLbl = issue ? '▼ '+issue.yNeg : '▼ ハト派';
+  const xPosLbl = issue ? issue.xPos+' ▶' : '保守 ▶';
+  const xNegLbl = issue ? '◀ '+issue.xNeg : '◀ リベラル';
+  ctx.textAlign='center'; ctx.textBaseline='top';    ctx.fillText(yPosLbl, tx(0), 2);
+  ctx.textBaseline='bottom';                          ctx.fillText(yNegLbl, tx(0), H-2);
+  ctx.textAlign='right'; ctx.textBaseline='middle';  ctx.fillText(xPosLbl, W-4, H/2);
+  ctx.textAlign='left';                              ctx.fillText(xNegLbl, 4, H/2);
 }
 
 function openUserBF(compareId){
@@ -4625,7 +4674,8 @@ async function postPartyToGitHubIssue(issueKey,speaker,quote,srcType,url){
     <div style="background:#0e1118;border-bottom:1px solid #2c3550;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1">
       <div>
         <div style="font-size:13px;font-weight:900;color:#3dd68c">🗳️ 政治的ポジション診断</div>
-        <div id="quiz-prog-txt" style="font-size:10px;color:#5a6a88;margin-top:2px"></div>
+        <div id="quiz-issue-lbl" style="font-size:10px;color:#c9a84c;margin-top:2px;font-weight:700"></div>
+        <div id="quiz-prog-txt" style="font-size:10px;color:#5a6a88;margin-top:1px"></div>
       </div>
       <button onclick="closeQuiz()" style="background:none;border:none;color:#5a6a88;font-size:18px;cursor:pointer;padding:4px">✕</button>
     </div>

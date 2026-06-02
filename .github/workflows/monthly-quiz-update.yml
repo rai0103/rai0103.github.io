@@ -1,0 +1,35 @@
+name: 月次クイズイシュー更新
+
+on:
+  schedule:
+    - cron: '0 17 1 * *'   # 毎月1日 17:00 UTC = 翌02:00 JST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: クイズイシューを更新
+        run: python scripts/update_quiz_issue.py
+
+      - name: 変更をコミット・プッシュ
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          MONTH=$(date +'%Y-%m')
+          git diff --staged --quiet || git commit -m "🗳️ 月次クイズイシュー更新 ${MONTH}"
+          git push
